@@ -179,9 +179,9 @@ bool request_handler::handle_command(string_map& input, reply& rep) {
 		new_player->set_posz(stof(input["posz"]));
 
 		// Set default teleport to the spawn position.
-		player->set_saved_posx(stof(input["posx"]));
-		player->set_saved_posy(stof(input["posy"]));
-		player->set_saved_posz(stof(input["posz"]));
+		new_player->set_saved_posx(stof(input["posx"]));
+		new_player->set_saved_posy(stof(input["posy"]));
+		new_player->set_saved_posz(stof(input["posz"]));
 
 		if(input["character"] == "Guard") {
 			character_dir = "guard";
