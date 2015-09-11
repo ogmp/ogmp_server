@@ -274,9 +274,9 @@ bool request_handler::handle_command(string_map& input, reply& rep) {
 			join["username"] = (item.second)->get_username();
 			join["team"] = (item.second)->get_team();
 			join["character"] = (item.second)->get_character();
-			join["posx"] = (item.second)->get_posx();
-			join["posy"] = (item.second)->get_posy();
-			join["posz"] = (item.second)->get_posz();
+			join["posx"] = to_string((item.second)->get_posx());
+			join["posy"] = to_string((item.second)->get_posy());
+			join["posz"] = to_string((item.second)->get_posz());
 
 			answer.push_back(join);
 		}
@@ -300,9 +300,9 @@ bool request_handler::handle_command(string_map& input, reply& rep) {
 		join["username"] = new_player->get_username();
 		join["team"] = new_player->get_team();
 		join["character"] = new_player->get_character();
-		join["posx"] = new_player->get_posx();
-		join["posy"] = new_player->get_posy();
-		join["posz"] = new_player->get_posz();
+		join["posx"] = to_string(new_player->get_posx());
+		join["posy"] = to_string(new_player->get_posy());
+		join["posz"] = to_string(new_player->get_posz());
 
 		client_manager_.add_command(join, new_player);
 
