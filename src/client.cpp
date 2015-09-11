@@ -14,11 +14,7 @@ blood_damage_(0.0f), blood_health_(1.0f), block_health_(1.0f), temp_health_(1.0f
 permanent_health_(1.0f), knocked_out_(_awake), lives_(1), blood_amount_(10.0f),
 recovery_time_(0.0f), roll_recovery_time_(0.0f), ragdoll_type_(0), time_of_death_(0),
 remove_blood_(false), blood_delay_(0), cut_throat_(false), cut_torso_(false),
-in_animation_(false), combat_stance_time_(-10.0f), backslash_(false), last_knife_time_(0.0f),
-plant_rustle_delay_(0.0f), in_plant_(0.0f), state_(0), active_dodging_(false),
-active_blocking_(false), startled_(false), on_ground_(false), frozen_(false),
-no_freeze_(false), active_block_duration_(0.0f), active_block_recharge_(0.0f),
-active_dodge_duration_(0.0f), active_dodge_recharge_(0.0f), ragdoll_time_(0.0f) {
+state_(0) {
 }
 
 void client::set_uid(string uid) {
@@ -177,76 +173,8 @@ void client::set_cut_torso(bool cut_torso) {
 	cut_torso_ = cut_torso;
 }
 
-void client::set_in_animation(bool in_animation) {
-	in_animation_ = in_animation;
-}
-
-void client::set_combat_stance_time(float combat_stance_time) {
-	combat_stance_time_ = combat_stance_time;
-}
-
-void client::set_backslash(bool backslash) {
-	backslash_ = backslash;
-}
-
-void client::set_last_knife_time(float last_knife_time) {
-	last_knife_time_ = last_knife_time;
-}
-
-void client::set_plant_rustle_delay(float plant_rustle_delay) {
-	plant_rustle_delay_ = plant_rustle_delay;
-}
-
-void client::set_in_plant(float in_plant) {
-	in_plant_ = in_plant;
-}
-
 void client::set_state(int state) {
 	state_ = state;
-}
-
-void client::set_active_dodging(bool active_dodging) {
-	active_dodging_ = active_dodging;
-}
-
-void client::set_active_blocking(bool active_blocking) {
-	active_blocking_ = active_blocking;
-}
-
-void client::set_startled(bool startled) {
-	startled_ = startled;
-}
-
-void client::set_on_ground(bool on_ground) {
-	on_ground_ = on_ground;
-}
-
-void client::set_frozen(bool frozen) {
-	frozen_ = frozen;
-}
-
-void client::set_no_freeze(bool no_freeze) {
-	no_freeze_ = no_freeze;
-}
-
-void client::set_active_block_duration(float active_block_duration) {
-	active_block_duration_ = active_block_duration;
-}
-
-void client::set_active_block_recharge(float active_block_recharge) {
-	active_block_recharge_ = active_block_recharge;
-}
-
-void client::set_active_dodge_duration(float active_dodge_duration) {
-	active_dodge_duration_ = active_dodge_duration;
-}
-
-void client::set_active_dodge_recharge(float active_dodge_recharge) {
-	active_dodge_recharge_ = active_dodge_recharge;
-}
-
-void client::set_ragdoll_time(float ragdoll_time) {
-	ragdoll_time_ = ragdoll_time;
 }
 
 void client::set_dirx(float dirx) {
@@ -427,76 +355,8 @@ bool client::get_cut_torso() {
 	return cut_torso_;
 }
 
-bool client::get_in_animation() {
-	return in_animation_;
-}
-
-float client::get_combat_stance_time() {
-	return combat_stance_time_;
-}
-
-bool client::get_backslash() {
-	return backslash_;
-}
-
-float client::get_last_knife_time() {
-	return last_knife_time_;
-}
-
-float client::get_plant_rustle_delay() {
-	return plant_rustle_delay_;
-}
-
-float client::get_in_plant() {
-	return in_plant_;
-}
-
 int client::get_state() {
 	return state_;
-}
-
-bool client::get_active_dodging() {
-	return active_dodging_;
-}
-
-bool client::get_active_blocking() {
-	return active_blocking_;
-}
-
-bool client::get_startled() {
-	return startled_;
-}
-
-bool client::get_on_ground() {
-	return on_ground_;
-}
-
-bool client::get_frozen() {
-	return frozen_;
-}
-
-bool client::get_no_freeze() {
-	return no_freeze_;
-}
-
-float client::get_active_block_duration() {
-	return active_block_duration_;
-}
-
-float client::get_active_block_recharge() {
-	return active_block_recharge_;
-}
-
-float client::get_active_dodge_duration() {
-	return active_dodge_duration_;
-}
-
-float client::get_active_dodge_recharge() {
-	return active_dodge_recharge_;
-}
-
-float client::get_ragdoll_time() {
-	return ragdoll_time_;
 }
 
 bool client::contains_signon(){
