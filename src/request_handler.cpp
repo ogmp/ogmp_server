@@ -174,6 +174,20 @@ bool request_handler::handle_command(string_map& input, reply& rep) {
 		new_player->set_username(input["username"]);
 		new_player->set_team(create_new_uid(4));
 		new_player->set_last_updated(signon_time + 30); // Give the client more time.
+
+		// Set coordinates to default if not set for compatibility with ogmp_clients < 0.0.3.
+		if(input.find("posx") == input.end()) {
+			input["posx"] = "0";
+		}
+
+		if(input.find("posy") == input.end()) {
+			input["posy"] = "0";
+		}
+
+		if(input.find("posz") == input.end()) {
+			input["posz"] = "0";
+		}
+
 		new_player->set_posx(stof(input["posx"]));
 		new_player->set_posy(stof(input["posy"]));
 		new_player->set_posz(stof(input["posz"]));
