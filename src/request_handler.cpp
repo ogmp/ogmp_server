@@ -174,7 +174,28 @@ bool request_handler::handle_command(string_map& input, reply& rep) {
 		new_player->set_username(input["username"]);
 		new_player->set_team(create_new_uid(4));
 		new_player->set_last_updated(signon_time + 30); // Give the client more time.
-		
+
+		// Set coordinates to default if not set for compatibility with ogmp_clients < 0.0.3.
+		if(input.find("posx") == input.end()) {
+			input["posx"] = "0";
+		}
+
+		if(input.find("posy") == input.end()) {
+			input["posy"] = "0";
+		}
+
+		if(input.find("posz") == input.end()) {
+			input["posz"] = "0";
+		}
+
+		new_player->set_posx(stof(input["posx"]));
+		new_player->set_posy(stof(input["posy"]));
+		new_player->set_posz(stof(input["posz"]));
+
+		// Set default teleport to the spawn position.
+		new_player->set_saved_posx(stof(input["posx"]));
+		new_player->set_saved_posy(stof(input["posy"]));
+		new_player->set_saved_posz(stof(input["posz"]));
 
 		if(input["character"] == "Guard") {
 			character_dir = "guard";
@@ -267,6 +288,9 @@ bool request_handler::handle_command(string_map& input, reply& rep) {
 			join["username"] = (item.second)->get_username();
 			join["team"] = (item.second)->get_team();
 			join["character"] = (item.second)->get_character();
+			join["posx"] = to_string((item.second)->get_posx());
+			join["posy"] = to_string((item.second)->get_posy());
+			join["posz"] = to_string((item.second)->get_posz());
 
 			answer.push_back(join);
 		}
@@ -290,6 +314,9 @@ bool request_handler::handle_command(string_map& input, reply& rep) {
 		join["username"] = new_player->get_username();
 		join["team"] = new_player->get_team();
 		join["character"] = new_player->get_character();
+		join["posx"] = to_string(new_player->get_posx());
+		join["posy"] = to_string(new_player->get_posy());
+		join["posz"] = to_string(new_player->get_posz());
 
 		client_manager_.add_command(join, new_player);
 
@@ -338,16 +365,6 @@ bool request_handler::handle_command(string_map& input, reply& rep) {
 		player->set_state(stoi(input["state"]));
 
 		player->set_last_updated(difftime(time(0), start_));
-
-		// Set default teleport to the spawn position.
-		if((player->get_saved_posx() == 0)
-		&& (player->get_saved_posy() == 0)
-		&& (player->get_saved_posz() == 0)) {
-			player->set_saved_posx(player->get_posx());
-			player->set_saved_posy(player->get_posy());
-			player->set_saved_posz(player->get_posz());
-		}
-
 
 		// Prepare the answer.
 		string_map_vector answer;

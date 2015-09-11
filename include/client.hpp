@@ -59,24 +59,7 @@ class client {
 		void set_blood_delay(int blood_delay);
 		void set_cut_throat(bool cut_throat);
 		void set_cut_torso(bool cut_torso);
-		void set_in_animation(bool in_animation);
-		void set_combat_stance_time(float combat_stance_time);
-		void set_backslash(bool backslash);
-		void set_last_knife_time(float last_knife_time);
-		void set_plant_rustle_delay(float plant_rustle_delay);
-		void set_in_plant(float in_plant);
 		void set_state(int state);
-		void set_active_dodging(bool active_dodging);
-		void set_active_blocking(bool active_blocking);
-		void set_startled(bool startled);
-		void set_on_ground(bool on_ground);
-		void set_frozen(bool frozen);
-		void set_no_freeze(bool no_freeze);
-		void set_active_block_duration(float active_block_duration);
-		void set_active_block_recharge(float active_block_recharge);
-		void set_active_dodge_duration(float active_dodge_duration);
-		void set_active_dodge_recharge(float active_dodge_recharge);
-		void set_ragdoll_time(float ragdoll_time);
 
 		string get_uid();
 		string get_level();
@@ -123,32 +106,15 @@ class client {
 		int get_blood_delay();
 		bool get_cut_throat();
 		bool get_cut_torso();
-		bool get_in_animation();
-		float get_combat_stance_time();
-		bool get_backslash();
-		float get_last_knife_time();
-		float get_plant_rustle_delay();
-		float get_in_plant();
 		int get_state();
-		bool get_active_dodging();
-		bool get_active_blocking();
-		bool get_startled();
-		bool get_on_ground();
-		bool get_frozen();
-		bool get_no_freeze();
-		float get_active_block_duration();
-		float get_active_block_recharge();
-		float get_active_dodge_duration();
-		float get_active_dodge_recharge();
-		float get_ragdoll_time();
 
 		bool contains_signon();
 		vector <string_map> get_signon_commands();
 
 	private:
 		string uid_, level_, username_, team_, character_;
-		float posx_, posy_, posz_, saved_posx_, saved_posy_, saved_posz_, dirx_, dirz_, blood_damage_, blood_health_, block_health_, temp_health_, permanent_health_, blood_amount_, recovery_time_, roll_recovery_time_, combat_stance_time_, last_knife_time_, plant_rustle_delay_, in_plant_, active_block_duration_, active_block_recharge_, active_dodge_duration_, active_dodge_recharge_, ragdoll_time_;
-		bool iscrouching_, isjumping_, isattacking_, isgrabbing_, isusingitem_, isdropping_, isrolling_, isjumpingoffwall_, isactiveblocking_, death_changed_, remove_blood_, cut_throat_, cut_torso_, in_animation_, backslash_, active_dodging_, active_blocking_, startled_, on_ground_, frozen_, no_freeze_;
+		float posx_, posy_, posz_, saved_posx_, saved_posy_, saved_posz_, dirx_, dirz_, blood_damage_, blood_health_, block_health_, temp_health_, permanent_health_, blood_amount_, recovery_time_, roll_recovery_time_;
+		bool iscrouching_, isjumping_, isattacking_, isgrabbing_, isusingitem_, isdropping_, isrolling_, isjumpingoffwall_, isactiveblocking_, death_changed_, remove_blood_, cut_throat_, cut_torso_;
 		double last_updated_, time_of_death_;
 		int knocked_out_, lives_, ragdoll_type_, blood_delay_, state_;
 		string_map_vector commands_;
