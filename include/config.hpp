@@ -17,10 +17,11 @@ class config {
 		double get_remove_delay();
 		bool get_allow_teleport();
 		bool get_debug();
+		string get_log_file();
 
 	private:
 		float update_refresh_rate_;
-		string welcome_message_;
+		string welcome_message_, log_file_;
 		double remove_delay_;
 		bool allow_teleport_, debug_;
 };

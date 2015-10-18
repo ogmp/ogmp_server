@@ -5,6 +5,6 @@ set (CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
 
 add_executable(ogmp main.cpp server.cpp connection.cpp connection_manager.cpp
 	reply.cpp request_handler.cpp request_parser.cpp mime_types.cpp client.cpp
-	client_manager.cpp config.cpp)
+	client_manager.cpp config.cpp log.cpp)
 
 target_link_libraries(ogmp pthread ${Boost_LIBRARIES})
