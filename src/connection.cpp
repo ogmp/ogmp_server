@@ -2,14 +2,15 @@
 #include <utility>
 #include <vector>
 #include "connection_manager.hpp"
+#include <mutex>
 
 namespace http {
 namespace server {
 
 connection::connection(boost::asio::ip::tcp::socket socket,
-connection_manager& manager, request_handler& handler) :
+connection_manager& manager, request_handler& handler, std::mutex& connection_mutex) :
 socket_(std::move(socket)), connection_manager_(manager),
-request_handler_(handler) {
+request_handler_(handler), connection_mutex_(connection_mutex) {
 }
 
 void connection::start() {
@@ -21,6 +22,7 @@ void connection::stop() {
 }
 
 void connection::do_read() {
+	connection_mutex_.lock();
 	auto self(shared_from_this());
 	socket_.async_read_some(boost::asio::buffer(buffer_),
 		[this, self](boost::system::error_code ec, std::size_t bytes_transferred) {
@@ -39,9 +41,10 @@ void connection::do_read() {
 					do_read();
 				}
 			} else if(ec != boost::asio::error::operation_aborted) {
-				connection_manager_.stop(shared_from_this());
+				stop();
 			}
 	});
+	connection_mutex_.unlock();
 }
 
 void connection::do_write() {
@@ -56,7 +59,7 @@ void connection::do_write() {
 			}
 
 			if (ec != boost::asio::error::operation_aborted) {
-				connection_manager_.stop(shared_from_this());
+				stop();
 			}
 	});
 }
