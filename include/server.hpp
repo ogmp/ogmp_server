@@ -49,6 +49,9 @@ class server {
 
 		// The next socket to be accepted.
 		boost::asio::ip::tcp::socket socket_;
+		
+		/// The mutex to prevent race conditions on the clients data
+		std::mutex connection_mutex_;
 
 		// The handler for all incoming requests.
 		request_handler request_handler_;
