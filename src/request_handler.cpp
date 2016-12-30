@@ -3,6 +3,7 @@
 #include "reply.hpp"
 #include "request.hpp"
 #include "header.hpp"
+#include "log.hpp"
 #include <fstream>
 #include <iostream>
 #include <sstream>
@@ -104,6 +105,9 @@ bool request_handler::handle_command(string_map& input, reply& rep) {
 		part["username"] = (item.second)->get_username();
 
 		client_manager_.add_command(part, item.second);
+
+		// Write the message to the logs.
+		log::print(message["text"]);
 	}
 
 	// First we check for commands that do not require to be an active player.
@@ -306,6 +310,9 @@ bool request_handler::handle_command(string_map& input, reply& rep) {
 		message["notif"] = "true";
 
 		client_manager_.add_command(message, new_player);
+
+		// Write the message to the logs.
+		log::print(message["text"]);
 
 		// Send join command to other players.
 		string_map join;
@@ -536,6 +543,9 @@ bool request_handler::handle_command(string_map& input, reply& rep) {
 
 		// Send message to everyone except the current client.
 		client_manager_.add_command(message, player);
+
+		// Write the message to the logs.
+		log::print(message["name"] + ": " + message["text"]);
 
 		// Stop and send reply.
 		return true;

@@ -16,6 +16,7 @@ config::config(string filename) {
 	remove_delay_ = pt.get<double>("ServerSettings.remove_delay");
 	allow_teleport_ = pt.get<bool>("ServerSettings.allow_teleport");
 	debug_ = pt.get<bool>("ServerSettings.debug");
+	log_file_ = pt.get<string>("ServerSettings.log_file");
 }
 
 float config::get_update_refresh_rate() {
@@ -36,6 +37,10 @@ bool config::get_allow_teleport() {
 
 bool config::get_debug() {
 	return debug_;
+}
+
+string config::get_log_file() {
+	return log_file_;
 }
 
 } // namespace server

@@ -1,6 +1,7 @@
 #include <iostream>
 #include "server.hpp"
 #include "config.hpp"
+#include "log.hpp"
 
 int main(int argc, char* argv[]) {
 	//We need to set this for the random UID generator in request_handler.cpp
@@ -31,6 +32,9 @@ int main(int argc, char* argv[]) {
 
 		// Initialise the server.
 		http::server::server s(conf, argv[1], argv[2], argv[3]);
+
+		// Set the log file, quick and dirty.
+		http::server::log::set_log_file(conf->get_log_file());
 
 		// Run the server until stopped.
 		s.run();
