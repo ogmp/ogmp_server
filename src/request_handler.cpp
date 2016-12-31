@@ -261,7 +261,7 @@ bool request_handler::handle_command(string_map& input, reply& rep) {
 			character_dir = "wolf";
 		}
 		new_player->set_character(character_dir);
-		
+
 		// Add the client to the client list.
 		client_manager_.add_client(new_player);
 
@@ -368,14 +368,13 @@ bool request_handler::handle_command(string_map& input, reply& rep) {
 
 		player->set_blood_delay(stoi(input["blood_delay"]));
 		player->set_cut_throat((input["cut_throat"] == "true"));
-		player->set_cut_torso((input["cut_torso"] == "true"));
 		player->set_state(stoi(input["state"]));
 
 		player->set_last_updated(difftime(time(0), start_));
 
 		// Prepare the answer.
 		string_map_vector answer;
-		
+
 		//If there are new players signing on then first return these commands
 		//The other commands will be send on the next update
 		if(player->contains_signon()){
@@ -384,7 +383,7 @@ bool request_handler::handle_command(string_map& input, reply& rep) {
 			}
 			return true;
 		}
-		
+
 		// Add commands from queue if available.
 		while(player->get_number_of_commands() != 0) {
 			answer.push_back(player->get_command());
@@ -395,7 +394,7 @@ bool request_handler::handle_command(string_map& input, reply& rep) {
 		|| (player->get_blood_health() <= 0.0f)
 		|| (player->get_temp_health() <= 0.0f)
 		|| (player->get_knocked_out() == _dead)
-		|| (player->get_lives() < 1)) {
+		|| (player->get_lives() < 0)) {
 			// Only announce death once.
 			if(!player->get_death_changed()) {
 				player->set_death_changed(true);
@@ -403,7 +402,7 @@ bool request_handler::handle_command(string_map& input, reply& rep) {
 
 				// Send message to all players in the group.
 				string_map message;
-	
+
 				message["type"] = "Message";
 				message["name"] = "server";
 				message["text"] = player->get_username() + " has died.";
@@ -428,7 +427,6 @@ bool request_handler::handle_command(string_map& input, reply& rep) {
 					player->set_roll_recovery_time(0.0f);
 					player->set_remove_blood(true);
 					player->set_cut_throat(false);
-					player->set_cut_torso(false);
 				}
 			}
 		} else {
@@ -452,7 +450,6 @@ bool request_handler::handle_command(string_map& input, reply& rep) {
 		update_self["roll_recovery_time"] = to_string(player->get_roll_recovery_time());
 		update_self["remove_blood"] = to_string(player->get_remove_blood());
 		update_self["cut_throat"] = to_string(player->get_cut_throat());
-		update_self["cut_torso"] = to_string(player->get_cut_torso());
 
 		answer.push_back(update_self);
 
@@ -491,7 +488,6 @@ bool request_handler::handle_command(string_map& input, reply& rep) {
 			update["remove_blood"] = to_string((item.second)->get_remove_blood());
 			update["blood_delay"] = to_string((item.second)->get_blood_delay());
 			update["cut_throat"] = to_string((item.second)->get_cut_throat());
-			update["cut_torso"] = to_string((item.second)->get_cut_torso());
 			update["state"] = to_string((item.second)->get_state());
 
 			answer.push_back(update);

@@ -13,8 +13,7 @@ isrolling_(false), isjumpingoffwall_(false), isactiveblocking_(false),
 blood_damage_(0.0f), blood_health_(1.0f), block_health_(1.0f), temp_health_(1.0f),
 permanent_health_(1.0f), knocked_out_(_awake), lives_(1), blood_amount_(10.0f),
 recovery_time_(0.0f), roll_recovery_time_(0.0f), ragdoll_type_(0), time_of_death_(0),
-remove_blood_(false), blood_delay_(0), cut_throat_(false), cut_torso_(false),
-state_(0) {
+remove_blood_(false), blood_delay_(0), cut_throat_(false), state_(0) {
 }
 
 void client::set_uid(string uid) {
@@ -167,10 +166,6 @@ void client::set_blood_delay(int blood_delay) {
 
 void client::set_cut_throat(bool cut_throat) {
 	cut_throat_ = cut_throat;
-}
-
-void client::set_cut_torso(bool cut_torso) {
-	cut_torso_ = cut_torso;
 }
 
 void client::set_state(int state) {
@@ -349,10 +344,6 @@ int client::get_blood_delay() {
 
 bool client::get_cut_throat() {
 	return cut_throat_;
-}
-
-bool client::get_cut_torso() {
-	return cut_torso_;
 }
 
 int client::get_state() {

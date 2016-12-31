@@ -58,7 +58,6 @@ class client {
 		void set_remove_blood(bool remove_blood);
 		void set_blood_delay(int blood_delay);
 		void set_cut_throat(bool cut_throat);
-		void set_cut_torso(bool cut_torso);
 		void set_state(int state);
 
 		string get_uid();
@@ -105,7 +104,6 @@ class client {
 		bool get_remove_blood();
 		int get_blood_delay();
 		bool get_cut_throat();
-		bool get_cut_torso();
 		int get_state();
 
 		bool contains_signon();
@@ -114,7 +112,7 @@ class client {
 	private:
 		string uid_, level_, username_, team_, character_;
 		float posx_, posy_, posz_, saved_posx_, saved_posy_, saved_posz_, dirx_, dirz_, blood_damage_, blood_health_, block_health_, temp_health_, permanent_health_, blood_amount_, recovery_time_, roll_recovery_time_;
-		bool iscrouching_, isjumping_, isattacking_, isgrabbing_, isusingitem_, isdropping_, isrolling_, isjumpingoffwall_, isactiveblocking_, death_changed_, remove_blood_, cut_throat_, cut_torso_;
+		bool iscrouching_, isjumping_, isattacking_, isgrabbing_, isusingitem_, isdropping_, isrolling_, isjumpingoffwall_, isactiveblocking_, death_changed_, remove_blood_, cut_throat_;
 		double last_updated_, time_of_death_;
 		int knocked_out_, lives_, ragdoll_type_, blood_delay_, state_;
 		string_map_vector commands_;
