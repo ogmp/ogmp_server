@@ -8,3 +8,4 @@ add_executable(ogmp main.cpp server.cpp connection.cpp connection_manager.cpp
 	client_manager.cpp config.cpp log.cpp)
 
 target_link_libraries(ogmp pthread ${Boost_LIBRARIES})
+# target_link_libraries(ogmp ws2_32 wsock32 ${Boost_LIBRARIES}) //Windows compile

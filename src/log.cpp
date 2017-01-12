@@ -2,6 +2,7 @@
 #include <fstream>
 #include <ostream>
 #include <iostream>
+#include <ctime>
 
 namespace http {
 namespace server {
