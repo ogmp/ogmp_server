@@ -28,19 +28,23 @@ void connection::do_read() {
 				request_parser::result_type result;
 				std::tie(result, std::ignore) = request_parser_.parse(
 				request_, buffer_.data(), buffer_.data() + bytes_transferred);
-
+				cout << "Data: " << buffer_.data() << endl;
 				if(result == request_parser::good) {
 					request_handler_.handle_request(request_, reply_);
-					do_write();
+					//do_write();
+					do_read();
 				} else if(result == request_parser::bad) {
 					reply_ = reply::stock_reply(reply::bad_request);
-					do_write();
+					//do_write();
+					do_read();
 				} else {
 					do_read();
 				}
 			} else if(ec != boost::asio::error::operation_aborted) {
+					cout << "error" << endl;
 					connection_manager_.stop(shared_from_this());
 			}
+
 	});
 }
 
