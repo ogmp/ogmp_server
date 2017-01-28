@@ -20,7 +20,15 @@ class connection_manager {
 		/// Add the specified connection to the manager and start it.
 		void start(connection_ptr c);
 
+		/// Stop the specified connection.
+		void stop(connection_ptr c);
+
+		/// Stop all connections.
+		void stop_all();
+
 	private:
+
+		std::set<connection_ptr> connections_;
 
 };
 

@@ -51,7 +51,7 @@ void server::do_accept() {
 
 		if (!ec) {
 			connection_manager_.start(make_shared<connection>(
-				move(socket_), connection_manager_, request_handler_, connection_mutex_
+				move(socket_), connection_manager_, request_handler_
 			));
 		}
 
@@ -65,7 +65,7 @@ void server::do_await_stop() {
 		// operations. Once all operations have finished the io_service::run()
 		// call will exit.
 		acceptor_.close();
-		//connection_manager_.stop_all();
+		connection_manager_.stop_all();
 	});
 }
 

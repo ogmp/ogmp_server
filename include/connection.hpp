@@ -24,7 +24,7 @@ class connection : public std::enable_shared_from_this<connection> {
 
 		/// Construct a connection with the given socket.
 		explicit connection(boost::asio::ip::tcp::socket socket,
-		connection_manager& manager, request_handler& handler, std::mutex& connection_mutex);
+		connection_manager& manager, request_handler& handler);
 
 		/// Start the first asynchronous operation for the connection.
 		void start();
@@ -47,9 +47,6 @@ class connection : public std::enable_shared_from_this<connection> {
 
 		/// The handler used to process the incoming request.
 		request_handler& request_handler_;
-		
-		/// The mutex to prevent race conditions on the clients data
-		std::mutex& connection_mutex_;
 
 		/// Buffer for incoming data.
 		std::array<char, 8192> buffer_;
