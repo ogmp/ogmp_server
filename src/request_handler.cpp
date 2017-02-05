@@ -9,6 +9,7 @@
 #include <sstream>
 #include <ctime>
 #include <time.h>
+#include <map>
 #include <boost/format.hpp>
 #include <boost/algorithm/string/replace.hpp>
 
@@ -568,7 +569,6 @@ void request_handler::handle_request(const request& req, reply& rep) {
 		if(config_->get_debug()) {
 			cout << "post: " << req.post_content << "\n";
 		}
-
 		string_map input;
 		string post_content= req.post_content;
 
