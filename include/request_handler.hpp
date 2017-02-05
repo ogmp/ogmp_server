@@ -6,6 +6,8 @@
 #include "config.hpp"
 #include "shared.hpp"
 #include <time.h>
+#include <boost/property_tree/ptree.hpp>
+#include <boost/property_tree/json_parser.hpp>
 
 namespace http {
 namespace server {
@@ -41,6 +43,7 @@ class request_handler {
 		string create_new_uid(size_t length);
 		bool url_decode(const string& in, string& out);
 		bool handle_command(string_map& input, reply& rep);
+		void handle_json_command(boost::property_tree::ptree& pt, reply& rep);
 		void prepare_reply(reply& rep, string extension = "");
 
 };

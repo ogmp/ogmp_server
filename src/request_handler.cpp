@@ -551,10 +551,19 @@ bool request_handler::handle_command(string_map& input, reply& rep) {
 	return false;
 }
 
+void request_handler::handle_json_command(boost::property_tree::ptree& pt, reply& rep){
+	cout << "type " << pt.get<std::string>("type") << endl;
+}
+
 void request_handler::handle_request(const request& req, reply& rep) {
 	if(req.json){
 		cout << "It's JSON!" << "\n";
-		cout << "Content " << req.content << "\n";
+		std::stringstream ss;
+		ss << req.content;
+		boost::property_tree::ptree pt;
+		read_json(ss, pt);
+		handle_json_command(pt , rep);
+		return;
 	}
 	// Decode url to path.
 	string request_path;
