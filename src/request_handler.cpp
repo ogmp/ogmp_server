@@ -552,6 +552,10 @@ bool request_handler::handle_command(string_map& input, reply& rep) {
 }
 
 void request_handler::handle_request(const request& req, reply& rep) {
+	if(req.json){
+		cout << "It's JSON!" << "\n";
+		cout << "Content " << req.content << "\n";
+	}
 	// Decode url to path.
 	string request_path;
 
@@ -565,17 +569,17 @@ void request_handler::handle_request(const request& req, reply& rep) {
 	}
 
 	// Parse post content.
-	if(!req.post_content.empty()) {
+	if(!req.content.empty()) {
 		if(config_->get_debug()) {
-			cout << "post: " << req.post_content << "\n";
+			cout << "post: " << req.content << "\n";
 		}
 		string_map input;
-		string post_content= req.post_content;
+		string content= req.content;
 
-		string_vector content;
-		content= seperate_string(post_content, "&");
+		string_vector separated_content;
+		separated_content = seperate_string(content, "&");
 
-		for(auto& item: content) {
+		for(auto& item: separated_content) {
 			string_vector name_value= seperate_string(item, "=");
 
 			if (name_value.size() == 2) {
@@ -588,7 +592,7 @@ void request_handler::handle_request(const request& req, reply& rep) {
 				return prepare_reply(rep);
 			}
 		} catch(...) {
-			std::cerr << "handle_command error: " << post_content << "\n";
+			std::cerr << "handle_command error: " << content << "\n";
 
 			rep= reply::stock_reply(reply::bad_request);
 			return;

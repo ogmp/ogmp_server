@@ -30,13 +30,13 @@ void connection::do_read() {
 				request_, buffer_.data(), buffer_.data() + bytes_transferred);
 				cout << "Data: " << buffer_.data() << endl;
 				if(result == request_parser::good) {
-					cout << "Request good" << endl;
+					//cout << "Request good" << endl;
 					request_handler_.handle_request(request_, reply_);
 					do_write();
 					std::fill(buffer_.data(), buffer_.data() + bytes_transferred, 0);
 					do_read();
 				} else if(result == request_parser::bad) {
-					cout << "Request bad" << endl;
+					//cout << "Request bad" << endl;
 					reply_ = reply::stock_reply(reply::bad_request);
 					do_write();
 					do_read();
@@ -44,7 +44,7 @@ void connection::do_read() {
 					do_read();
 				}
 			} else if(ec != boost::asio::error::operation_aborted) {
-					cout << "error" << endl;
+					cout << "operation_aborted" << endl;
 					connection_manager_.stop(shared_from_this());
 			}
 

@@ -15,8 +15,9 @@ struct request {
 	int http_version_major;
 	int http_version_minor;
 	std::vector<header> headers;
+	bool json = false;
 
-	std::string post_content;
+	std::string content;
 };
 
 } // namespace server

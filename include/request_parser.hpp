@@ -4,7 +4,11 @@
 #include <tuple>
 #include <boost/property_tree/ptree.hpp>
 #include <boost/property_tree/json_parser.hpp>
-#include<iostream>
+#include "request_parser.hpp"
+#include "request.hpp"
+#include <iostream>
+#include <fstream>
+#include <string>
 
 namespace http {
 namespace server {
@@ -29,17 +33,24 @@ class request_parser {
 		/// has been consumed.
 		template <typename InputIterator>
 		std::tuple<result_type, InputIterator> parse(request& req, InputIterator begin, InputIterator end) {
-			std::stringstream ss;
-  			ss << begin;
-			read_json(ss, pt);
-			//A check to see if the incomming message is JSON.
-			boost::optional< boost::property_tree::ptree& > child = pt.get_child_optional( "type" );
-			if( child )
-			{
-				result_type result= good;
-				return std::make_tuple(result, begin);
-			}
+			try
+		    {
+				std::stringstream ss;
+	  			ss << begin;
+				read_json(ss, pt);
+				//A check to see if the incomming message is JSON.
+				boost::optional< boost::property_tree::ptree& > child = pt.get_child_optional( "type" );
+				if( child )
+				{
+					req.json = true;
+					req.content = begin;
+					result_type result = good;
+					return std::make_tuple(result, begin);
 
+				}
+		    }
+		    catch(boost::property_tree::json_parser::json_parser_error &je)
+		    {}
 			while(begin != end) {
 				result_type result= consume(req, *begin++);
 				if(result == good || result == bad)
@@ -93,7 +104,7 @@ class request_parser {
 			expecting_newline_2,
 			expecting_newline_3,
 			//An additional variable to store the post content.
-			read_post_content
+			read_content
 		} state_;
 };
 
