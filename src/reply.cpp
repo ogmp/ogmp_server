@@ -88,6 +88,10 @@ const char crlf[] = { '\r', '\n' };
 
 std::vector<boost::asio::const_buffer> reply::to_buffers() {
 	std::vector<boost::asio::const_buffer> buffers;
+	if(json){
+		buffers.push_back(boost::asio::buffer(content));
+		return buffers;
+	}
 	buffers.push_back(status_strings::to_buffer(status));
 	for(std::size_t i = 0; i < headers.size(); ++i) {
 		header& h = headers[i];

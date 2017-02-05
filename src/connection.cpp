@@ -36,7 +36,7 @@ void connection::do_read() {
 					std::fill(buffer_.data(), buffer_.data() + bytes_transferred, 0);
 					do_read();
 				} else if(result == request_parser::bad) {
-					//cout << "Request bad" << endl;
+					cout << "Request bad" << endl;
 					reply_ = reply::stock_reply(reply::bad_request);
 					do_write();
 					do_read();
@@ -58,6 +58,7 @@ void connection::do_write() {
 			if (!ec) {
 				// Initiate graceful connection closure.
 				boost::system::error_code ignored_ec;
+				cout << "Closing down the socket" << endl;
 				socket_.shutdown(boost::asio::ip::tcp::socket::shutdown_both,
 				ignored_ec);
 			}

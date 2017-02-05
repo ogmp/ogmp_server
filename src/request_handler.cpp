@@ -553,6 +553,33 @@ bool request_handler::handle_command(string_map& input, reply& rep) {
 
 void request_handler::handle_json_command(boost::property_tree::ptree& pt, reply& rep){
 	cout << "type " << pt.get<std::string>("type") << endl;
+	string message_type = pt.get<std::string>("type");
+	rep.json = true;
+	if(message_type == "SignOn"){
+		boost::property_tree::ptree answer;
+		answer.put("type", "SignOn");
+		answer.put("content.refresh_rate", 30);
+		answer.put("content.welcome_message", "Howdidlyhoo!");
+		answer.put("content.username", "Gyrth");
+		answer.put("content.team", "Gyrth");
+		answer.put("content.character", "Turner");
+		std::ostringstream oss;
+        write_json(oss, answer, false);
+		cout << "Reply: " << oss.str() << endl;
+		rep.content= oss.str();
+	}
+	else if(message_type == "Update"){
+
+	}
+	else if(message_type == "Message"){
+
+	}
+	else if(message_type == "SavePosition"){
+
+	}
+	else if(message_type == "LoadPosition"){
+
+	}
 }
 
 void request_handler::handle_request(const request& req, reply& rep) {
@@ -664,15 +691,6 @@ void request_handler::prepare_reply(reply& rep, string extension) {
 
 string request_handler::encode_output(string_map output) {
 	stringstream answer;
-
-	// XXX: this is a hack, because type has to be first element
-	if(output.find("type") != output.end()) {
-		answer << "type=" << output["type"];
-		if(output.size() > 1) {
-			answer << "&";
-		}
-		output.erase("type");
-	}
 
 	for(auto it = output.begin(); it != output.end(); ++it) {
 		// Add separator for all but the first element.

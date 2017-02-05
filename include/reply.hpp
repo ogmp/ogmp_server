@@ -37,6 +37,8 @@ struct reply {
 	/// The content to be sent in the reply.
 	std::string content;
 
+	bool json = false;
+
 	/// Convert the reply into a vector of buffers. The buffers do not own the
 	/// underlying memory blocks, therefore the reply object must remain valid and
 	/// not be changed until the write operation has completed.
