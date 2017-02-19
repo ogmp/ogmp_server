@@ -50,6 +50,7 @@ class request_handler {
 		string jsonToString(boost::property_tree::ptree& json);
 		void HandleSignOn(boost::property_tree::ptree& content, stack<reply>& rep, client& this_client);
 		void HandleUpdate(boost::property_tree::ptree& content, stack<reply>& rep, client& this_client);
+		void AddErrorMessage(stack<reply>& rep, string message);
 };
 
 } // namespace server

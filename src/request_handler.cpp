@@ -574,13 +574,7 @@ void request_handler::handle_json_command(boost::property_tree::ptree& pt, stack
 		if(message_type == "SignOn"){
 			HandleSignOn(content, rep, this_client);
 		}else{
-			reply new_reply;
-			new_reply.json = true;
-			boost::property_tree::ptree answer;
-			answer.put("type", "Error");
-			answer.put("content.message", "Not signed on yet.");
-			new_reply.content= jsonToString(answer);
-			rep.push(new_reply);
+			AddErrorMessage(rep, "Not yet signed on!");
 		}
 		
 	}else{
@@ -601,6 +595,16 @@ void request_handler::handle_json_command(boost::property_tree::ptree& pt, stack
 	
 }
 
+void request_handler::AddErrorMessage(stack<reply>& rep, string message){
+	reply new_reply;
+	new_reply.json = true;
+	boost::property_tree::ptree answer;
+	answer.put("type", "Error");
+	answer.put("content.message", message);
+	new_reply.content= jsonToString(answer);
+	rep.push(new_reply);
+}
+
 string request_handler::jsonToString(boost::property_tree::ptree& json){
 	std::ostringstream oss;
 	write_json(oss, json, false);
@@ -612,18 +616,166 @@ void request_handler::HandleSignOn(boost::property_tree::ptree& content, stack<r
 	reply new_reply;
 	new_reply.json = true;
 	boost::property_tree::ptree answer;
+	
+	string character_dir = "turner";
+	double signon_time= difftime(time(0), start_);
+
+	// Check if someone is already using that username.
+	client_map all_clients= client_manager_.get_clients();
+
+	for(auto& item: all_clients) {
+		if((item.second)->get_username() == content.get<string>("username")) {
+			AddErrorMessage(rep, "Already a user with that username!");
+			// Stop and send reply.
+			break;
+		}
+	}
+	
+	// Create a new client.
+	client_ptr new_player(new client());
+
+	this_client.set_level(content.get<string>("level"));
+	this_client.set_username(content.get<string>("username"));
+	this_client.set_team(content.get<string>("username"));
+	
+	this_client.set_posx(stof(content.get<string>("posx")));
+	this_client.set_posy(stof(content.get<string>("posy")));
+	this_client.set_posz(stof(content.get<string>("posz")));
+
+	// Set default teleport to the spawn position.
+	this_client.set_saved_posx(stof(content.get<string>("posx")));
+	this_client.set_saved_posy(stof(content.get<string>("posy")));
+	this_client.set_saved_posz(stof(content.get<string>("posz")));
+	
+	if(content.get<string>("character") == "Guard") {
+		character_dir = "guard";
+	}else if(content.get<string>("character") == "Raider+Rabbit") {
+		character_dir = "raider_rabbit";
+	}else if(content.get<string>("character") == "Pale+Turner") {
+		character_dir = "pale_turner";
+	}else if(content.get<string>("character") == "Guard+2") {
+		character_dir = "guard2";
+	}else if(content.get<string>("character") == "Base+Guard") {
+		character_dir = "base_guard";
+	}else if(content.get<string>("character") == "Cat") {
+		character_dir = "cat";
+	}else if(content.get<string>("character") == "Female+Rabbit+1") {
+		character_dir = "female_rabbit_1";
+	}else if(content.get<string>("character") == "Female+Rabbit+2") {
+		character_dir = "female_rabbit_2";
+	}else if(content.get<string>("character") == "Female+Rabbit+3") {
+		character_dir = "female_rabbit_3";
+	}else if(content.get<string>("character") == "Rat") {
+		character_dir = "rat";
+	}else if(content.get<string>("character") == "Female+Rat") {
+		character_dir = "female_rat";
+	}else if(content.get<string>("character") == "Hooded+Rat") {
+		character_dir = "hooded_rat";
+	}else if(content.get<string>("character") == "Light+Armored+Dog+Big") {
+		character_dir = "lt_dog_big";
+	}else if(content.get<string>("character") == "Light+Armored+Dog+Female") {
+		character_dir = "lt_dog_female";
+	}else if(content.get<string>("character") == "Light+Armored+Dog+Male+1") {
+		character_dir = "lt_dog_male_1";
+	}else if(content.get<string>("character") == "Light+Armored+Dog+Male+2") {
+		character_dir = "lt_dog_male_2";
+	}else if(content.get<string>("character") == "Male+Cat") {
+		character_dir = "male_cat";
+	}else if(content.get<string>("character") == "Female+Cat") {
+		character_dir = "female_cat";
+	}else if(content.get<string>("character") == "Striped+Cat") {
+		character_dir = "striped_cat";
+	}else if(content.get<string>("character") == "Fancy+Striped+Cat") {
+		character_dir = "fancy_striped_cat";
+	}else if(content.get<string>("character") == "Male+Rabbit+1") {
+		character_dir = "male_rabbit_1";
+	}else if(content.get<string>("character") == "Male+Rabbit+2") {
+		character_dir = "male_rabbit_2";
+	}else if(content.get<string>("character") == "Male+Rabbit+3") {
+		character_dir = "male_rabbit_3";
+	}else if(content.get<string>("character") == "Male+Wolf") {
+		character_dir = "male_wolf";
+	}else if(content.get<string>("character") == "Civilian") {
+		character_dir = "civ";
+	}else if(content.get<string>("character") == "Pale+Rabbit+Civilian") {
+		character_dir = "pale_rabbit_civ";
+	}else if(content.get<string>("character") == "Rabbot") {
+		character_dir = "rabbot";
+	}else if(content.get<string>("character") == "Turner") {
+		character_dir = "turner";
+	}else if(content.get<string>("character") == "Wolf") {
+		character_dir = "wolf";
+	}
+	this_client.set_character(character_dir);
+	
+	// Add the client to the client list.
+	client_manager_.add_client(new_player);
+	
 	answer.put("type", "SignOn");
-	answer.put("content.refresh_rate", 30);
-	answer.put("content.welcome_message", "Howdidlyhoo!");
-	answer.put("content.username", "Gyrth");
-	answer.put("content.team", "Gyrth");
-	answer.put("content.character", "Turner");
+	answer.put("content.refresh_rate", to_string(config_->get_update_refresh_rate()));
+	answer.put("content.welcome_message", config_->get_welcome_message());
+	answer.put("content.username", this_client.get_username());
+	answer.put("content.team", this_client.get_team());
+	answer.put("content.character", character_dir);
 	
 	//When the signon is successful 
 	this_client.set_signed_on(true);
 	
 	new_reply.content= jsonToString(answer);
 	rep.push(new_reply);
+	
+	client_ptr client_pointer(&this_client);
+	
+	// Now add join commands for all other clients in the same group.
+	client_map other_clients = client_manager_.get_clients(client_pointer);
+
+	for(auto& item: other_clients) {
+		reply spawn_character_reply;
+		boost::property_tree::ptree spawn_command;
+
+		spawn_command.put("type", "SpawnCharacter");
+		spawn_command.put("username", (item.second)->get_username());
+		spawn_command.put("team", (item.second)->get_team());
+		spawn_command.put("character", (item.second)->get_character());
+		spawn_command.put("posx", to_string((item.second)->get_posx()));
+		spawn_command.put("posy", to_string((item.second)->get_posy()));
+		spawn_command.put("posz", to_string((item.second)->get_posz()));
+
+		spawn_character_reply.content= jsonToString(spawn_command);
+		rep.push(spawn_character_reply);
+	}
+	
+	// Send message command to other players.
+	reply message_reply;
+	boost::property_tree::ptree new_player_joined_message;
+
+	new_player_joined_message.put("type", "Message");
+	new_player_joined_message.put("name", "server");
+	new_player_joined_message.put("text", new_player->get_username() + " has entered the room.");
+	new_player_joined_message.put("notif", "true");
+	
+	message_reply.content= jsonToString(new_player_joined_message);
+
+	//client_manager_.add_command(message, new_player);
+
+	// Write the message to the logs.
+	log::print(new_player_joined_message.get<string>("text"));
+
+	// Send join command to other players.
+	reply spawn_character_reply;
+	boost::property_tree::ptree spawn_command;
+
+	spawn_command.put("type", "SpawnCharacter");
+	spawn_command.put("username", this_client.get_username());
+	spawn_command.put("team", this_client.get_team());
+	spawn_command.put("character", this_client.get_character());
+	spawn_command.put("posx", to_string(this_client.get_posx()));
+	spawn_command.put("posy", to_string(this_client.get_posy()));
+	spawn_command.put("posz", to_string(this_client.get_posz()));
+
+	spawn_character_reply.content= jsonToString(spawn_command);
+
+	//client_manager_.add_command(join, new_player);
 }
 
 void request_handler::HandleUpdate(boost::property_tree::ptree& content, stack<reply>& rep, client& this_client){
