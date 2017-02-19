@@ -29,7 +29,7 @@ class request_handler {
 		explicit request_handler(config_ptr conf, const string& doc_root);
 
 		// Handle a request and produce a reply.
-		void handle_request(const request& req, stack <reply>& rep);
+		void handle_request(const request& req, stack <reply>& rep, client& this_client);
 
 		// Turns a string map into an encoded string.
 		string encode_output(string_map output);
@@ -45,11 +45,11 @@ class request_handler {
 		string create_new_uid(size_t length);
 		bool url_decode(const string& in, string& out);
 		bool handle_command(string_map& input, stack <reply>& rep);
-		void handle_json_command(boost::property_tree::ptree& pt, stack <reply>& rep);
+		void handle_json_command(boost::property_tree::ptree& pt, stack <reply>& rep, client& this_client);
 		void prepare_reply(stack <reply>& rep, string extension = "");
 		string jsonToString(boost::property_tree::ptree& json);
-		void HandleSignOn(boost::property_tree::ptree& content, stack<reply>& rep);
-		void HandleUpdate(boost::property_tree::ptree& content, stack<reply>& rep);
+		void HandleSignOn(boost::property_tree::ptree& content, stack<reply>& rep, client& this_client);
+		void HandleUpdate(boost::property_tree::ptree& content, stack<reply>& rep, client& this_client);
 };
 
 } // namespace server

@@ -55,6 +55,9 @@ class connection : public std::enable_shared_from_this<connection> {
 
 		/// The incoming request.
 		request request_;
+		
+		//There is one client per connection
+		client this_client_;
 
 		/// The parser for the incoming request.
 		request_parser request_parser_;

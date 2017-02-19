@@ -13,7 +13,7 @@ isrolling_(false), isjumpingoffwall_(false), isactiveblocking_(false),
 blood_damage_(0.0f), blood_health_(1.0f), block_health_(1.0f), temp_health_(1.0f),
 permanent_health_(1.0f), knocked_out_(_awake), lives_(1), blood_amount_(10.0f),
 recovery_time_(0.0f), roll_recovery_time_(0.0f), ragdoll_type_(0), time_of_death_(0),
-remove_blood_(false), blood_delay_(0), cut_throat_(false), state_(0) {
+remove_blood_(false), blood_delay_(0), cut_throat_(false), state_(0), has_signed_on_(false) {
 }
 
 void client::set_uid(string uid) {
@@ -130,6 +130,10 @@ void client::set_knocked_out(int knocked_out) {
 
 void client::set_death_changed(bool death_changed) {
 	death_changed_ = death_changed;
+}
+
+void client::set_signed_on(bool signed_on){
+	has_signed_on_ = signed_on;
 }
 
 void client::set_time_of_death(double current_seconds) {
@@ -348,6 +352,10 @@ bool client::get_cut_throat() {
 
 int client::get_state() {
 	return state_;
+}
+
+bool client::get_signed_on(){
+	return has_signed_on_;
 }
 
 bool client::contains_signon(){

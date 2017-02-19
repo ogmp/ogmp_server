@@ -563,27 +563,42 @@ bool request_handler::handle_command(string_map& input, stack <reply>& rep) {
 	return false;
 }
 
-void request_handler::handle_json_command(boost::property_tree::ptree& pt, stack<reply>& rep){
+void request_handler::handle_json_command(boost::property_tree::ptree& pt, stack<reply>& rep, client& this_client){
 	cout << "type " << pt.get<std::string>("type") << endl;
 	
 	string message_type = pt.get<std::string>("type");
 	boost::property_tree::ptree content = pt.get_child("content");
 	
-	if(message_type == "SignOn"){
-		HandleSignOn(content, rep);
+	if(!this_client.get_signed_on()){
+		//The client only has access to the signon command at first.
+		if(message_type == "SignOn"){
+			HandleSignOn(content, rep, this_client);
+		}else{
+			reply new_reply;
+			new_reply.json = true;
+			boost::property_tree::ptree answer;
+			answer.put("type", "Error");
+			answer.put("content.message", "Not signed on yet.");
+			new_reply.content= jsonToString(answer);
+			rep.push(new_reply);
+		}
+		
+	}else{
+		if(message_type == "Update"){
+			HandleUpdate(content, rep, this_client);
+		}
+		else if(message_type == "Message"){
+			
+		}
+		else if(message_type == "SavePosition"){
+			
+		}
+		else if(message_type == "LoadPosition"){
+			
+		}
+		
 	}
-	else if(message_type == "Update"){
-		HandleUpdate(content, rep);
-	}
-	else if(message_type == "Message"){
-
-	}
-	else if(message_type == "SavePosition"){
-
-	}
-	else if(message_type == "LoadPosition"){
-
-	}
+	
 }
 
 string request_handler::jsonToString(boost::property_tree::ptree& json){
@@ -593,7 +608,7 @@ string request_handler::jsonToString(boost::property_tree::ptree& json){
 	return oss.str();
 }
 
-void request_handler::HandleSignOn(boost::property_tree::ptree& content, stack<reply>& rep){
+void request_handler::HandleSignOn(boost::property_tree::ptree& content, stack<reply>& rep, client& this_client){
 	reply new_reply;
 	new_reply.json = true;
 	boost::property_tree::ptree answer;
@@ -604,11 +619,14 @@ void request_handler::HandleSignOn(boost::property_tree::ptree& content, stack<r
 	answer.put("content.team", "Gyrth");
 	answer.put("content.character", "Turner");
 	
+	//When the signon is successful 
+	this_client.set_signed_on(true);
+	
 	new_reply.content= jsonToString(answer);
 	rep.push(new_reply);
 }
 
-void request_handler::HandleUpdate(boost::property_tree::ptree& content, stack<reply>& rep){
+void request_handler::HandleUpdate(boost::property_tree::ptree& content, stack<reply>& rep, client& this_client){
 	reply new_reply;
 	new_reply.json = true;
 	boost::property_tree::ptree answer;
@@ -619,14 +637,14 @@ void request_handler::HandleUpdate(boost::property_tree::ptree& content, stack<r
 	rep.push(new_reply);
 }
 
-void request_handler::handle_request(const request& req, stack<reply>& rep) {
+void request_handler::handle_request(const request& req, stack<reply>& rep, client& this_client) {
 	if(req.json){
 		cout << "It's JSON!" << "\n";
 		std::stringstream ss;
 		ss << req.content;
 		boost::property_tree::ptree pt;
 		read_json(ss, pt);
-		handle_json_command(pt , rep);
+		handle_json_command(pt , rep, this_client);
 		return;
 	}
 	// Decode url to path.

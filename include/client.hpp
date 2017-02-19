@@ -41,6 +41,7 @@ class client {
 		void set_roll(bool roll);
 		void set_jumpoffwall(bool offwall);
 		void set_activeblock(bool offwall);
+		void set_signed_on(bool signedon);
 
 		void set_blood_damage(float blood_damage);
 		void set_blood_health(float blood_health);
@@ -105,6 +106,7 @@ class client {
 		int get_blood_delay();
 		bool get_cut_throat();
 		int get_state();
+		bool get_signed_on();
 
 		bool contains_signon();
 		vector <string_map> get_signon_commands();
@@ -112,7 +114,7 @@ class client {
 	private:
 		string uid_, level_, username_, team_, character_;
 		float posx_, posy_, posz_, saved_posx_, saved_posy_, saved_posz_, dirx_, dirz_, blood_damage_, blood_health_, block_health_, temp_health_, permanent_health_, blood_amount_, recovery_time_, roll_recovery_time_;
-		bool iscrouching_, isjumping_, isattacking_, isgrabbing_, isusingitem_, isdropping_, isrolling_, isjumpingoffwall_, isactiveblocking_, death_changed_, remove_blood_, cut_throat_;
+		bool iscrouching_, isjumping_, isattacking_, isgrabbing_, isusingitem_, isdropping_, isrolling_, isjumpingoffwall_, isactiveblocking_, death_changed_, remove_blood_, cut_throat_, has_signed_on_;
 		double last_updated_, time_of_death_;
 		int knocked_out_, lives_, ragdoll_type_, blood_delay_, state_;
 		string_map_vector commands_;
