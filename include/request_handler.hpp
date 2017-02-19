@@ -47,7 +47,9 @@ class request_handler {
 		bool handle_command(string_map& input, stack <reply>& rep);
 		void handle_json_command(boost::property_tree::ptree& pt, stack <reply>& rep);
 		void prepare_reply(stack <reply>& rep, string extension = "");
-
+		string jsonToString(boost::property_tree::ptree& json);
+		void HandleSignOn(boost::property_tree::ptree& content, stack<reply>& rep);
+		void HandleUpdate(boost::property_tree::ptree& content, stack<reply>& rep);
 };
 
 } // namespace server

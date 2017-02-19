@@ -565,21 +565,15 @@ bool request_handler::handle_command(string_map& input, stack <reply>& rep) {
 
 void request_handler::handle_json_command(boost::property_tree::ptree& pt, stack<reply>& rep){
 	cout << "type " << pt.get<std::string>("type") << endl;
+	
 	string message_type = pt.get<std::string>("type");
-	reply new_reply;
-	new_reply.json = true;
-	boost::property_tree::ptree answer;
+	boost::property_tree::ptree content = pt.get_child("content");
+	
 	if(message_type == "SignOn"){
-		answer.put("type", "SignOn");
-		answer.put("content.refresh_rate", 30);
-		answer.put("content.welcome_message", "Howdidlyhoo!");
-		answer.put("content.username", "Gyrth");
-		answer.put("content.team", "Gyrth");
-		answer.put("content.character", "Turner");
+		HandleSignOn(content, rep);
 	}
 	else if(message_type == "Update"){
-		answer.put("type", "Update");
-		answer.put("content.message", "update message");
+		HandleUpdate(content, rep);
 	}
 	else if(message_type == "Message"){
 
@@ -590,10 +584,38 @@ void request_handler::handle_json_command(boost::property_tree::ptree& pt, stack
 	else if(message_type == "LoadPosition"){
 
 	}
+}
+
+string request_handler::jsonToString(boost::property_tree::ptree& json){
 	std::ostringstream oss;
-	write_json(oss, answer, false);
-	cout << "Reply: " << oss.str() << endl;
-	new_reply.content= oss.str();
+	write_json(oss, json, false);
+	//cout << "Reply: " << oss.str() << endl;
+	return oss.str();
+}
+
+void request_handler::HandleSignOn(boost::property_tree::ptree& content, stack<reply>& rep){
+	reply new_reply;
+	new_reply.json = true;
+	boost::property_tree::ptree answer;
+	answer.put("type", "SignOn");
+	answer.put("content.refresh_rate", 30);
+	answer.put("content.welcome_message", "Howdidlyhoo!");
+	answer.put("content.username", "Gyrth");
+	answer.put("content.team", "Gyrth");
+	answer.put("content.character", "Turner");
+	
+	new_reply.content= jsonToString(answer);
+	rep.push(new_reply);
+}
+
+void request_handler::HandleUpdate(boost::property_tree::ptree& content, stack<reply>& rep){
+	reply new_reply;
+	new_reply.json = true;
+	boost::property_tree::ptree answer;
+	answer.put("type", "Update");
+	answer.put("content.message", "update message");
+	
+	new_reply.content= jsonToString(answer);
 	rep.push(new_reply);
 }
 
