@@ -10,6 +10,7 @@
 #include <boost/property_tree/ini_parser.hpp>
 #include <boost/property_tree/json_parser.hpp>
 #include <stack>
+#include <boost/make_shared.hpp>
 
 namespace http {
 namespace server {

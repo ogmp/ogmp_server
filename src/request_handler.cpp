@@ -616,7 +616,7 @@ void request_handler::HandleSignOn(boost::property_tree::ptree& content, stack<r
 	reply new_reply;
 	new_reply.json = true;
 	boost::property_tree::ptree answer;
-	
+
 	string character_dir = "turner";
 	double signon_time= difftime(time(0), start_);
 
@@ -630,7 +630,7 @@ void request_handler::HandleSignOn(boost::property_tree::ptree& content, stack<r
 			break;
 		}
 	}
-	
+
 	// Create a new client.
 	client_ptr new_player(new client());
 
@@ -717,14 +717,14 @@ void request_handler::HandleSignOn(boost::property_tree::ptree& content, stack<r
 	answer.put("content.username", this_client.get_username());
 	answer.put("content.team", this_client.get_team());
 	answer.put("content.character", character_dir);
-	
+
 	//When the signon is successful 
 	this_client.set_signed_on(true);
-	
+
 	new_reply.content= jsonToString(answer);
 	rep.push(new_reply);
-	
-	client_ptr client_pointer(&this_client);
+
+	client_ptr client_pointer = boost::make_shared<client>(this_client);
 	
 	// Now add join commands for all other clients in the same group.
 	client_map other_clients = client_manager_.get_clients(client_pointer);
@@ -744,7 +744,7 @@ void request_handler::HandleSignOn(boost::property_tree::ptree& content, stack<r
 		spawn_character_reply.content= jsonToString(spawn_command);
 		rep.push(spawn_character_reply);
 	}
-	
+
 	// Send message command to other players.
 	reply message_reply;
 	boost::property_tree::ptree new_player_joined_message;
