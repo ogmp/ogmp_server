@@ -9,6 +9,7 @@
 #include <boost/property_tree/ptree.hpp>
 #include <boost/property_tree/ini_parser.hpp>
 #include <boost/property_tree/json_parser.hpp>
+#include <stack>
 
 namespace http {
 namespace server {
@@ -28,7 +29,7 @@ class request_handler {
 		explicit request_handler(config_ptr conf, const string& doc_root);
 
 		// Handle a request and produce a reply.
-		void handle_request(const request& req, reply& rep);
+		void handle_request(const request& req, stack <reply>& rep);
 
 		// Turns a string map into an encoded string.
 		string encode_output(string_map output);
@@ -43,9 +44,9 @@ class request_handler {
 		string_vector seperate_string(string input, string seperator);
 		string create_new_uid(size_t length);
 		bool url_decode(const string& in, string& out);
-		bool handle_command(string_map& input, reply& rep);
-		void handle_json_command(boost::property_tree::ptree& pt, reply& rep);
-		void prepare_reply(reply& rep, string extension = "");
+		bool handle_command(string_map& input, stack <reply>& rep);
+		void handle_json_command(boost::property_tree::ptree& pt, stack <reply>& rep);
+		void prepare_reply(stack <reply>& rep, string extension = "");
 
 };
 

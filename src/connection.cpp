@@ -31,20 +31,22 @@ void connection::do_read() {
 				cout << "Data: " << buffer_.data() << endl;
 				if(result == request_parser::good) {
 					//cout << "Request good" << endl;
-					request_handler_.handle_request(request_, reply_);
+					request_handler_.handle_request(request_, replies_);
 					do_write();
 					std::fill(buffer_.data(), buffer_.data() + bytes_transferred, 0);
-					do_read();
+					do_read();					
 				} else if(result == request_parser::bad) {
 					cout << "Request bad" << endl;
-					reply_ = reply::stock_reply(reply::bad_request);
+					reply bad_request_reply = reply::stock_reply(reply::bad_request);
+					replies_.push(bad_request_reply);
 					do_write();
-					do_read();
+					cout << "Closing connection because of bad request." << endl;
+					connection_manager_.stop(shared_from_this());
 				} else {
 					do_read();
 				}
 			} else if(ec != boost::asio::error::operation_aborted) {
-					cout << "operation_aborted" << endl;
+					cout << "connection closed" << endl;
 					connection_manager_.stop(shared_from_this());
 			}
 
@@ -53,20 +55,26 @@ void connection::do_read() {
 
 void connection::do_write() {
 	auto self(shared_from_this());
-	boost::asio::async_write(socket_, reply_.to_buffers(),
-		[this, self](boost::system::error_code ec, std::size_t) {
-			if (!ec) {
+	while(replies_.size() > 0){
+		reply& current_reply = replies_.top();
+		
+		cout << "Writing socket: " << current_reply.content << endl;
+		cout << "JSON: " << current_reply.json << endl;
+		
+		boost::asio::async_write(socket_, current_reply.to_buffers(),
+		[this, self, current_reply](boost::system::error_code ec, std::size_t) {
+			if (ec || !current_reply.json) {
 				// Initiate graceful connection closure.
 				boost::system::error_code ignored_ec;
-				cout << "Closing down the socket" << endl;
 				socket_.shutdown(boost::asio::ip::tcp::socket::shutdown_both,
-				ignored_ec);
-			}
-
-			if (ec != boost::asio::error::operation_aborted) {
+					ignored_ec);
+				}
+				if (ec == boost::asio::error::operation_aborted) {
 					connection_manager_.stop(shared_from_this());
-			}
-	});
+				}
+			});
+		replies_.pop();
+	}
 }
 
 } // namespace server

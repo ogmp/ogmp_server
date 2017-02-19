@@ -10,7 +10,9 @@
 #include <memory>
 #include <boost/asio.hpp>
 #include <mutex>
+#include <stack>
 
+using namespace std;
 namespace http {
 namespace server {
 
@@ -56,9 +58,8 @@ class connection : public std::enable_shared_from_this<connection> {
 
 		/// The parser for the incoming request.
 		request_parser request_parser_;
-
-		/// The reply to be sent back to the client.
-		reply reply_;
+		
+		stack<reply> replies_;
 };
 
 typedef std::shared_ptr<connection> connection_ptr;

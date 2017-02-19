@@ -12,11 +12,23 @@
 #include <map>
 #include <boost/format.hpp>
 #include <boost/algorithm/string/replace.hpp>
+#include <stack>
 
 namespace http {
 namespace server {
 
 using namespace std;
+
+template <typename T>
+
+struct my_id_translator
+{
+    typedef T internal_type;
+    typedef T external_type;
+
+    boost::optional<T> get_value(const T &v) { return  v.substr(1, v.size() - 2) ; }
+    boost::optional<T> put_value(const T &v) { return '"' + v +'"'; }
+};
 
 request_handler::request_handler(config_ptr conf, const string& doc_root) :
 config_(conf), doc_root_(doc_root), client_manager_(conf) {
@@ -82,10 +94,10 @@ bool request_handler::url_decode(const string& in, string& out) {
 	return true;
 }
 
-bool request_handler::handle_command(string_map& input, reply& rep) {
+bool request_handler::handle_command(string_map& input, stack <reply>& rep) {
 	// Remove old clients that are not responding.
 	client_map inactive_clients= client_manager_.pop_inactive_clients(start_);
-
+	reply new_reply;
 	// Announce quits.
 	for(auto& item: inactive_clients) {
 		// Add part message to all clients that are in the same
@@ -127,7 +139,7 @@ bool request_handler::handle_command(string_map& input, reply& rep) {
 			answer.push_back(user);
 		}
 
-		rep.content= encode_output(answer);
+		new_reply.content= encode_output(answer);
 
 		// Stop and send reply.
 		return true;
@@ -142,7 +154,7 @@ bool request_handler::handle_command(string_map& input, reply& rep) {
 
 			answer["type"] = "Timeout";
 
-			rep.content= encode_output(answer);
+			new_reply.content= encode_output(answer);
 
 			// Stop and send reply.
 			return true;
@@ -164,7 +176,7 @@ bool request_handler::handle_command(string_map& input, reply& rep) {
 				answer["type"] = "Error";
 				answer["reason"] = "Username already existing.";
 
-				rep.content= encode_output(answer);
+				new_reply.content= encode_output(answer);
 
 				// Stop and send reply.
 				return true;
@@ -300,7 +312,7 @@ bool request_handler::handle_command(string_map& input, reply& rep) {
 			answer.push_back(join);
 		}
 
-		rep.content= encode_output(answer);
+		new_reply.content= encode_output(answer);
 
 		// Send message command to other players.
 		string_map message;
@@ -494,7 +506,7 @@ bool request_handler::handle_command(string_map& input, reply& rep) {
 			answer.push_back(update);
 		}
 
-		rep.content= encode_output(answer);
+		new_reply.content= encode_output(answer);
 
 		// Stop and send reply.
 		return true;
@@ -525,7 +537,7 @@ bool request_handler::handle_command(string_map& input, reply& rep) {
 		answer["posy"] = to_string(player->get_saved_posy());
 		answer["posz"] = to_string(player->get_saved_posz());
 
-		rep.content= encode_output(answer);
+		new_reply.content= encode_output(answer);
 
 		// Stop and send reply.
 		return true;
@@ -551,25 +563,23 @@ bool request_handler::handle_command(string_map& input, reply& rep) {
 	return false;
 }
 
-void request_handler::handle_json_command(boost::property_tree::ptree& pt, reply& rep){
+void request_handler::handle_json_command(boost::property_tree::ptree& pt, stack<reply>& rep){
 	cout << "type " << pt.get<std::string>("type") << endl;
 	string message_type = pt.get<std::string>("type");
-	rep.json = true;
+	reply new_reply;
+	new_reply.json = true;
+	boost::property_tree::ptree answer;
 	if(message_type == "SignOn"){
-		boost::property_tree::ptree answer;
 		answer.put("type", "SignOn");
 		answer.put("content.refresh_rate", 30);
 		answer.put("content.welcome_message", "Howdidlyhoo!");
 		answer.put("content.username", "Gyrth");
 		answer.put("content.team", "Gyrth");
 		answer.put("content.character", "Turner");
-		std::ostringstream oss;
-        write_json(oss, answer, false);
-		cout << "Reply: " << oss.str() << endl;
-		rep.content= oss.str();
 	}
 	else if(message_type == "Update"){
-
+		answer.put("type", "Update");
+		answer.put("content.message", "update message");
 	}
 	else if(message_type == "Message"){
 
@@ -580,9 +590,14 @@ void request_handler::handle_json_command(boost::property_tree::ptree& pt, reply
 	else if(message_type == "LoadPosition"){
 
 	}
+	std::ostringstream oss;
+	write_json(oss, answer, false);
+	cout << "Reply: " << oss.str() << endl;
+	new_reply.content= oss.str();
+	rep.push(new_reply);
 }
 
-void request_handler::handle_request(const request& req, reply& rep) {
+void request_handler::handle_request(const request& req, stack<reply>& rep) {
 	if(req.json){
 		cout << "It's JSON!" << "\n";
 		std::stringstream ss;
@@ -594,9 +609,8 @@ void request_handler::handle_request(const request& req, reply& rep) {
 	}
 	// Decode url to path.
 	string request_path;
-
 	if(!url_decode(req.uri, request_path)) {
-		rep= reply::stock_reply(reply::bad_request);
+		rep.push(reply::stock_reply(reply::bad_request));
 		return;
 	}
 
@@ -629,19 +643,18 @@ void request_handler::handle_request(const request& req, reply& rep) {
 			}
 		} catch(...) {
 			std::cerr << "handle_command error: " << content << "\n";
-
-			rep= reply::stock_reply(reply::bad_request);
+			rep.push(reply::stock_reply(reply::bad_request));
 			return;
 		}
 
 		// If we are still in this method there was no command handler.
-		rep= reply::stock_reply(reply::not_found);
+		rep.push(reply::stock_reply(reply::not_found));
 		return;
 	}
 
 	// Request path must be absolute and not contain "..".
 	if(request_path.empty() || request_path[0] != '/' || request_path.find("..") != string::npos) {
-		rep= reply::stock_reply(reply::bad_request);
+		rep.push(reply::stock_reply(reply::bad_request));
 		return;
 	}
 
@@ -664,29 +677,30 @@ void request_handler::handle_request(const request& req, reply& rep) {
 	ifstream is(full_path.c_str(), ios::in | ios::binary);
 
 	if(!is) {
-		rep= reply::stock_reply(reply::not_found);
+		rep.push(reply::stock_reply(reply::not_found));
 		return;
 	}
 
 	// Fill out the reply to be sent to the client.
-	rep.status= reply::ok;
+	rep.top().status = reply::ok;
 	char buf[512];
 
 	while(is.read(buf, sizeof(buf)).gcount() > 0) {
-		rep.content.append(buf, is.gcount());
+		rep.top().content.append(buf, is.gcount());
 	}
 
 	return prepare_reply(rep, extension);
 }
 
-void request_handler::prepare_reply(reply& rep, string extension) {
-	rep.status= reply::ok;
+void request_handler::prepare_reply(stack<reply>& rep, string extension) {
+	reply& top_reply = rep.top();
+	top_reply.status= reply::ok;
 
-	rep.headers.resize(2);
-	rep.headers[0].name= "Content-Length";
-	rep.headers[0].value= to_string(rep.content.size());
-	rep.headers[1].name= "Content-Type";
-	rep.headers[1].value= mime_types::extension_to_type(extension);
+	top_reply.headers.resize(2);
+	top_reply.headers[0].name= "Content-Length";
+	top_reply.headers[0].value= to_string(top_reply.content.size());
+	top_reply.headers[1].name= "Content-Type";
+	top_reply.headers[1].value= mime_types::extension_to_type(extension);
 }
 
 string request_handler::encode_output(string_map output) {
