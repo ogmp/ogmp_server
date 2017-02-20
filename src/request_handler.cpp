@@ -162,186 +162,7 @@ bool request_handler::handle_command(string_map& input, stack <reply>& rep) {
 	}
 
 	if(input["type"] == "SignOn") {
-		string new_uid= create_new_uid(10);
-		string character_dir = "turner";
-		double signon_time= difftime(time(0), start_);
-
-		// Check if someone is already using that username.
-		client_map all_clients= client_manager_.get_clients();
-
-		for(auto& item: all_clients) {
-			if((item.second)->get_username() == input["username"]) {
-				string_map answer;
-
-				answer["type"] = "Error";
-				answer["reason"] = "Username already existing.";
-
-				new_reply.content= encode_output(answer);
-
-				// Stop and send reply.
-				return true;
-			}
-		}
-
-		// Create a new client.
-		client_ptr new_player(new client());
-
-		new_player->set_uid(new_uid);
-		new_player->set_level(input["level"]);
-		new_player->set_username(input["username"]);
-		new_player->set_team(create_new_uid(4));
-		new_player->set_last_updated(signon_time + 30); // Give the client more time.
-
-		// Set coordinates to default if not set for compatibility with ogmp_clients < 0.0.3.
-		if(input.find("posx") == input.end()) {
-			input["posx"] = "0";
-		}
-
-		if(input.find("posy") == input.end()) {
-			input["posy"] = "0";
-		}
-
-		if(input.find("posz") == input.end()) {
-			input["posz"] = "0";
-		}
-
-		new_player->set_posx(stof(input["posx"]));
-		new_player->set_posy(stof(input["posy"]));
-		new_player->set_posz(stof(input["posz"]));
-
-		// Set default teleport to the spawn position.
-		new_player->set_saved_posx(stof(input["posx"]));
-		new_player->set_saved_posy(stof(input["posy"]));
-		new_player->set_saved_posz(stof(input["posz"]));
-
-		if(input["character"] == "Guard") {
-			character_dir = "guard";
-		}else if(input["character"] == "Raider+Rabbit") {
-			character_dir = "raider_rabbit";
-		}else if(input["character"] == "Pale+Turner") {
-			character_dir = "pale_turner";
-		}else if(input["character"] == "Guard+2") {
-			character_dir = "guard2";
-		}else if(input["character"] == "Base+Guard") {
-			character_dir = "base_guard";
-		}else if(input["character"] == "Cat") {
-			character_dir = "cat";
-		}else if(input["character"] == "Female+Rabbit+1") {
-			character_dir = "female_rabbit_1";
-		}else if(input["character"] == "Female+Rabbit+2") {
-			character_dir = "female_rabbit_2";
-		}else if(input["character"] == "Female+Rabbit+3") {
-			character_dir = "female_rabbit_3";
-		}else if(input["character"] == "Rat") {
-			character_dir = "rat";
-		}else if(input["character"] == "Female+Rat") {
-			character_dir = "female_rat";
-		}else if(input["character"] == "Hooded+Rat") {
-			character_dir = "hooded_rat";
-		}else if(input["character"] == "Light+Armored+Dog+Big") {
-			character_dir = "lt_dog_big";
-		}else if(input["character"] == "Light+Armored+Dog+Female") {
-			character_dir = "lt_dog_female";
-		}else if(input["character"] == "Light+Armored+Dog+Male+1") {
-			character_dir = "lt_dog_male_1";
-		}else if(input["character"] == "Light+Armored+Dog+Male+2") {
-			character_dir = "lt_dog_male_2";
-		}else if(input["character"] == "Male+Cat") {
-			character_dir = "male_cat";
-		}else if(input["character"] == "Female+Cat") {
-			character_dir = "female_cat";
-		}else if(input["character"] == "Striped+Cat") {
-			character_dir = "striped_cat";
-		}else if(input["character"] == "Fancy+Striped+Cat") {
-			character_dir = "fancy_striped_cat";
-		}else if(input["character"] == "Male+Rabbit+1") {
-			character_dir = "male_rabbit_1";
-		}else if(input["character"] == "Male+Rabbit+2") {
-			character_dir = "male_rabbit_2";
-		}else if(input["character"] == "Male+Rabbit+3") {
-			character_dir = "male_rabbit_3";
-		}else if(input["character"] == "Male+Wolf") {
-			character_dir = "male_wolf";
-		}else if(input["character"] == "Civilian") {
-			character_dir = "civ";
-		}else if(input["character"] == "Pale+Rabbit+Civilian") {
-			character_dir = "pale_rabbit_civ";
-		}else if(input["character"] == "Rabbot") {
-			character_dir = "rabbot";
-		}else if(input["character"] == "Turner") {
-			character_dir = "turner";
-		}else if(input["character"] == "Wolf") {
-			character_dir = "wolf";
-		}
-		new_player->set_character(character_dir);
-
-		// Add the client to the client list.
-		client_manager_.add_client(new_player);
-
-		// Create answer for current client.
-		string_map_vector answer;
-
-		// First add a signon command.
-		string_map signon;
-
-		signon["type"] = "SignOn";
-		signon["uid"] = new_uid;
-		signon["refr"] = to_string(config_->get_update_refresh_rate());
-		signon["welcome_message"] = config_->get_welcome_message();
-		signon["username"] = new_player->get_username();
-		signon["team"] = new_player->get_team();
-		signon["character"] = character_dir;
-		signon["server"] = input["server"];
-
-		answer.push_back(signon);
-
-		// Now add join commands for all other clients in the same group.
-		client_map other_clients= client_manager_.get_clients(new_player);
-
-		for(auto& item: other_clients) {
-			string_map join;
-
-			join["type"] = "SpawnCharacter";
-			join["username"] = (item.second)->get_username();
-			join["team"] = (item.second)->get_team();
-			join["character"] = (item.second)->get_character();
-			join["posx"] = to_string((item.second)->get_posx());
-			join["posy"] = to_string((item.second)->get_posy());
-			join["posz"] = to_string((item.second)->get_posz());
-
-			answer.push_back(join);
-		}
-
-		new_reply.content= encode_output(answer);
-
-		// Send message command to other players.
-		string_map message;
-
-		message["type"] = "Message";
-		message["name"] = "server";
-		message["text"] = new_player->get_username() + " has entered the room.";
-		message["notif"] = "true";
-
-		client_manager_.add_command(message, new_player);
-
-		// Write the message to the logs.
-		log::print(message["text"]);
-
-		// Send join command to other players.
-		string_map join;
-
-		join["type"] = "SpawnCharacter";
-		join["username"] = new_player->get_username();
-		join["team"] = new_player->get_team();
-		join["character"] = new_player->get_character();
-		join["posx"] = to_string(new_player->get_posx());
-		join["posy"] = to_string(new_player->get_posy());
-		join["posz"] = to_string(new_player->get_posz());
-
-		client_manager_.add_command(join, new_player);
-
-		// Stop and send reply.
-		return true;
+	
 	} else if(input["type"] ==  "Update") {
 		// Update player states.
 		player->set_posx(stof(input["posx"]));
@@ -779,14 +600,174 @@ void request_handler::HandleSignOn(boost::property_tree::ptree& content, stack<r
 }
 
 void request_handler::HandleUpdate(boost::property_tree::ptree& content, stack<reply>& rep, client& this_client){
-	reply new_reply;
-	new_reply.json = true;
-	boost::property_tree::ptree answer;
-	answer.put("type", "Update");
-	answer.put("content.message", "update message");
+	// Update player states.
+	this_client.set_posx(stof(content.get<string>("posx")));
+	this_client.set_posy(stof(content.get<string>("posy")));
+	this_client.set_posz(stof(content.get<string>("posz")));
+	this_client.set_dirx(stof(content.get<string>("dirx")));
+	this_client.set_dirz(stof(content.get<string>("dirz")));
+
+	this_client.set_crouch((content.get<string>("crouch") == "true"));
+	this_client.set_jump((content.get<string>("jump") == "true"));
+	this_client.set_attack((content.get<string>("attack") == "true"));
+	this_client.set_grab((content.get<string>("grab") == "true"));
+	this_client.set_item((content.get<string>("item") == "true"));
+	this_client.set_drop((content.get<string>("drop") == "true"));
+	this_client.set_roll((content.get<string>("roll") == "true"));
+	this_client.set_jumpoffwall((content.get<string>("offwall") == "true"));
+	this_client.set_activeblock((content.get<string>("activeblock") == "true"));
 	
-	new_reply.content= jsonToString(answer);
-	rep.push(new_reply);
+	if((this_client.get_time_of_death() < 1) || (difftime(time(0), this_client.get_time_of_death()) > 10)) {
+		// Do not allow this_clients to increase some parts of their health.
+		if(stof(content.get<string>("blood_health")) < this_client.get_blood_health()) {
+			this_client.set_blood_health(stof(content.get<string>("blood_health")));
+		}
+		if(stof(content.get<string>("permanent_health")) < this_client.get_permanent_health()) {
+			this_client.set_permanent_health(stof(content.get<string>("permanent_health")));
+		}
+		if(stoi(content.get<string>("knocked_out")) > this_client.get_knocked_out()) {
+			this_client.set_knocked_out(stoi(content.get<string>("knocked_out")));
+		}
+		if(stoi(content.get<string>("lives")) < this_client.get_lives()) {
+			this_client.set_lives(stoi(content.get<string>("lives")));
+		}
+		this_client.set_blood_damage(stof(content.get<string>("blood_damage")));
+		this_client.set_block_health(stof(content.get<string>("block_health")));
+		this_client.set_temp_health(stof(content.get<string>("temp_health")));
+	}
+
+	this_client.set_blood_delay(stoi(content.get<string>("blood_delay")));
+	this_client.set_cut_throat((content.get<string>("cut_throat") == "true"));
+	this_client.set_state(stoi(content.get<string>("state")));
+
+	client_ptr client_pointer = boost::make_shared<client>(this_client);
+
+	// Add commands from queue if available.
+	while(this_client.get_number_of_commands() != 0) {
+		reply command_reply;
+		boost::property_tree::ptree command_tree;
+		
+		string_map message = this_client.get_command();
+		
+		command_tree.put("type", message["type"]);
+		command_tree.put("content.text", message["text"]);
+		command_tree.put("content.notif", message["notif"]);
+		
+		command_reply.json = true;
+		command_reply.content= jsonToString(command_tree);
+		rep.push(command_reply);
+	}
+
+	// Check if the player died (we consider unconscious as dead for now).
+	if((this_client.get_permanent_health() <= 0.0f)
+	|| (this_client.get_blood_health() <= 0.0f)
+	|| (this_client.get_temp_health() <= 0.0f)
+	|| (this_client.get_knocked_out() == _dead)
+	|| (this_client.get_lives() < 0)) {
+		// Only announce death once.
+		if(!this_client.get_death_changed()) {
+			this_client.set_death_changed(true);
+			this_client.set_time_of_death(time(0));
+
+			// Send message to all players in the group.
+			string_map message;
+
+			message["type"] = "Message";
+			message["name"] = "server";
+			message["text"] = this_client.get_username() + " has died.";
+			message["notif"] = "true";
+
+			client_manager_.add_command(message, client_pointer);
+
+			// Also send the message to player himself.
+			this_client.add_command(message);
+		} else {
+			// Revive the player after some seconds (experimental).
+			if(difftime(time(0), this_client.get_time_of_death()) > 5) {
+				this_client.set_blood_health(1.0f);
+				this_client.set_permanent_health(1.0f);
+				this_client.set_blood_damage(0.0f);
+				this_client.set_block_health(1.0f);
+				this_client.set_temp_health(1.0f);
+				this_client.set_knocked_out(_awake);
+				this_client.set_lives(1);
+				this_client.set_blood_amount(10.0f);
+				this_client.set_recovery_time(0.0f);
+				this_client.set_roll_recovery_time(0.0f);
+				this_client.set_remove_blood(true);
+				this_client.set_cut_throat(false);
+			}
+		}
+	} else {
+		this_client.set_death_changed(false);
+		this_client.set_remove_blood(false);
+	}
+	
+	// Send health back to player.
+	reply updateself_reply;
+	boost::property_tree::ptree updateself_tree;
+	
+	updateself_tree.put("type", "UpdateSelf");
+	updateself_tree.put("content.blood_damage", to_string(this_client.get_blood_damage()));
+	updateself_tree.put("content.blood_health", to_string(this_client.get_blood_health()));
+	updateself_tree.put("content.block_health", to_string(this_client.get_block_health()));
+	updateself_tree.put("content.temp_health", to_string(this_client.get_temp_health()));
+	updateself_tree.put("content.permanent_health", to_string(this_client.get_permanent_health()));
+	updateself_tree.put("content.knocked_out", to_string(this_client.get_knocked_out()));
+	updateself_tree.put("content.lives", to_string(this_client.get_lives()));
+	updateself_tree.put("content.blood_amount", to_string(this_client.get_blood_amount()));
+	updateself_tree.put("content.recovery_time", to_string(this_client.get_recovery_time()));
+	updateself_tree.put("content.roll_recovery_time", to_string(this_client.get_roll_recovery_time()));
+	updateself_tree.put("content.remove_blood", to_string(this_client.get_remove_blood()));
+	updateself_tree.put("content.cut_throat", to_string(this_client.get_cut_throat()));
+
+	updateself_reply.json = true;
+	updateself_reply.content= jsonToString(updateself_tree);
+	rep.push(updateself_reply);
+
+	// Get states of the other clients.
+	client_map other_clients= client_manager_.get_clients(client_pointer);
+
+	for(auto& item: other_clients) {
+		reply update_reply;
+		update_reply.json = true;
+		boost::property_tree::ptree update_tree;
+		
+		update_tree.put("type", "Update");
+
+		update_tree.put("content.username" , (item.second)->get_username());
+		update_tree.put("content.posx" , to_string((item.second)->get_posx()));
+		update_tree.put("content.posy" , to_string((item.second)->get_posy()));
+		update_tree.put("content.posz" , to_string((item.second)->get_posz()));
+		update_tree.put("content.dirx" , to_string((item.second)->get_dirx()));
+		update_tree.put("content.dirz" , to_string((item.second)->get_dirz()));
+		update_tree.put("content.crouch" , to_string((item.second)->get_crouch()));
+		update_tree.put("content.jump" , to_string((item.second)->get_jump()));
+		update_tree.put("content.attack" , to_string((item.second)->get_attack()));
+		update_tree.put("content.grab" , to_string((item.second)->get_grab()));
+		update_tree.put("content.item" , to_string((item.second)->get_item()));
+		update_tree.put("content.drop" , to_string((item.second)->get_drop()));
+		update_tree.put("content.roll" , to_string((item.second)->get_roll()));
+		update_tree.put("content.offwall" , to_string((item.second)->get_jumpoffwall()));
+		update_tree.put("content.activeblock" , to_string((item.second)->get_activeblock()));
+		update_tree.put("content.blood_damage" , to_string((item.second)->get_blood_damage()));
+		update_tree.put("content.blood_health" , to_string((item.second)->get_blood_health()));
+		update_tree.put("content.block_health" , to_string((item.second)->get_block_health()));
+		update_tree.put("content.temp_health" , to_string((item.second)->get_temp_health()));
+		update_tree.put("content.permanent_health" , to_string((item.second)->get_permanent_health()));
+		update_tree.put("content.knocked_out" , to_string((item.second)->get_knocked_out()));
+		update_tree.put("content.lives" , to_string((item.second)->get_lives()));
+		update_tree.put("content.blood_amount" , to_string((item.second)->get_blood_amount()));
+		update_tree.put("content.recovery_time" , to_string((item.second)->get_recovery_time()));
+		update_tree.put("content.roll_recovery_time" , to_string((item.second)->get_roll_recovery_time()));
+		update_tree.put("content.remove_blood" , to_string((item.second)->get_remove_blood()));
+		update_tree.put("content.blood_delay" , to_string((item.second)->get_blood_delay()));
+		update_tree.put("content.cut_throat" , to_string((item.second)->get_cut_throat()));
+		update_tree.put("content.state" , to_string((item.second)->get_state()));
+
+		update_reply.content= jsonToString(update_tree);
+		rep.push(update_reply);
+	}
 }
 
 void request_handler::handle_request(const request& req, stack<reply>& rep, client& this_client) {
