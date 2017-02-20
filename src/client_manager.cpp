@@ -11,7 +11,7 @@ client_manager::client_manager(config_ptr conf) : config_(conf) {
 void client_manager::add_client(client_ptr player) {
 	boost::unique_lock<boost::mutex> scoped_lock(clients_mutex_);
 
-	clients_[player->get_uid()] = player;
+	clients_[player->get_username()] = player;
 }
 
 void client_manager::add_command(string_map command, client_ptr initiator) {
@@ -58,7 +58,8 @@ client_map client_manager::get_clients(client_ptr initiator) {
 
 	for(auto& item: clients_) {
 		// Skip initiator.
-		if(item.second == initiator) {
+		if(item.second->get_username() == initiator->get_username()) {
+			cout << "continue" << endl;
 			continue;
 		}
 
@@ -79,7 +80,7 @@ client_map client_manager::pop_inactive_clients(time_t start, client_ptr initiat
 	client_map inactive_clients;
 
 	for(auto& item: clients_) {
-		if((initiator) && ((item.second)->get_uid() == initiator->get_uid())) {
+		if((initiator) && ((item.second)->get_username() == initiator->get_username())) {
 			continue;
 		}
 
