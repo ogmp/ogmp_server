@@ -217,34 +217,7 @@ bool request_handler::handle_command(string_map& input, stack <reply>& rep) {
 }
 
 void request_handler::handle_json_command(boost::property_tree::ptree& pt, stack<reply>& rep, client& this_client){
-	cout << "type " << pt.get<std::string>("type") << endl;
-	
-	string message_type = pt.get<std::string>("type");
-	boost::property_tree::ptree content = pt.get_child("content");
-	
-	if(!this_client.get_signed_on()){
-		//The client only has access to the signon command at first.
-		if(message_type == "SignOn"){
-			HandleSignOn(content, rep, this_client);
-		}else{
-			AddErrorMessage(rep, "Not yet signed on!");
-		}
-		
-	}else{
-		if(message_type == "Update"){
-			HandleUpdate(content, rep, this_client);
-		}
-		else if(message_type == "Message"){
-			
-		}
-		else if(message_type == "SavePosition"){
-			
-		}
-		else if(message_type == "LoadPosition"){
-			
-		}
-		
-	}
+
 	
 }
 
@@ -265,94 +238,132 @@ string request_handler::jsonToString(boost::property_tree::ptree& json){
 	return oss.str();
 }
 
-void request_handler::HandleSignOn(boost::property_tree::ptree& content, stack<reply>& rep, client& this_client){
+string request_handler::GetString(int size){
+	string output;
+	for(int i = 0; i < size; i++, data_index++){
+		output += data[data_index];
+	}
+	return output;
+}
+
+float request_handler::GetFloat(){
+	char b[] = {data[data_index + 3], data[data_index + 2], data[data_index + 1], data[data_index]};
+	float f;
+	memcpy(&f, &b, sizeof(f));
+	data_index += 4;
+	return f;
+}
+
+char* request_handler::floatToByteArray(float f) {
+	char *array;
+	array = (char*)(&f);
+	return array;
+}
+
+void request_handler::HandleSignOn(stack<reply>& rep, client& this_client){
 	reply new_reply;
-	boost::property_tree::ptree answer;
+
+	string username = GetString(username_size);
+	string character = GetString(character_size);
+	string levelname = GetString(level_size);
+	string version = GetString(version_size);
+	
+	float posx = GetFloat();
+	float posy = GetFloat();
+	float posz = GetFloat();
+	
+	cout << "Username " << username << endl;
+	cout << "character " << character << endl;
+	cout << "levelname " << levelname << endl;
+	cout << "version " << version << endl;
+	cout << "posx " << posx << endl;
+	cout << "posy " << posy << endl;
+	cout << "posz " << posz << endl;
 
 	string character_dir = "turner";
 	double signon_time= difftime(time(0), start_);
-
+	
 	// Check if someone is already using that username.
 	client_map all_clients= client_manager_.get_clients();
-
+	
 	for(auto& item: all_clients) {
-		if((item.second)->get_username() == content.get<string>("username")) {
+		if((item.second)->get_username() == username) {
 			AddErrorMessage(rep, "Already a user with that username!");
 			// Stop and send reply.
 			break;
 		}
 	}
-
-	this_client.set_level(content.get<string>("level"));
-	this_client.set_username(content.get<string>("username"));
-	this_client.set_team(content.get<string>("username"));
 	
-	this_client.set_posx(stof(content.get<string>("posx")));
-	this_client.set_posy(stof(content.get<string>("posy")));
-	this_client.set_posz(stof(content.get<string>("posz")));
-
+	this_client.set_level(levelname);
+	this_client.set_username(username);
+	this_client.set_team(username);
+	
+	this_client.set_posx(posx);
+	this_client.set_posy(posy);
+	this_client.set_posz(posz);
+	
 	// Set default teleport to the spawn position.
-	this_client.set_saved_posx(stof(content.get<string>("posx")));
-	this_client.set_saved_posy(stof(content.get<string>("posy")));
-	this_client.set_saved_posz(stof(content.get<string>("posz")));
+	this_client.set_saved_posx(posx);
+	this_client.set_saved_posy(posy);
+	this_client.set_saved_posz(posz);
 	
-	if(content.get<string>("character") == "Guard") {
+	if(character == "Guard") {
 		character_dir = "guard";
-	}else if(content.get<string>("character") == "Raider+Rabbit") {
+	}else if(character == "Raider+Rabbit") {
 		character_dir = "raider_rabbit";
-	}else if(content.get<string>("character") == "Pale+Turner") {
+	}else if(character == "Pale+Turner") {
 		character_dir = "pale_turner";
-	}else if(content.get<string>("character") == "Guard+2") {
+	}else if(character == "Guard+2") {
 		character_dir = "guard2";
-	}else if(content.get<string>("character") == "Base+Guard") {
+	}else if(character == "Base+Guard") {
 		character_dir = "base_guard";
-	}else if(content.get<string>("character") == "Cat") {
+	}else if(character == "Cat") {
 		character_dir = "cat";
-	}else if(content.get<string>("character") == "Female+Rabbit+1") {
+	}else if(character == "Female+Rabbit+1") {
 		character_dir = "female_rabbit_1";
-	}else if(content.get<string>("character") == "Female+Rabbit+2") {
+	}else if(character == "Female+Rabbit+2") {
 		character_dir = "female_rabbit_2";
-	}else if(content.get<string>("character") == "Female+Rabbit+3") {
+	}else if(character == "Female+Rabbit+3") {
 		character_dir = "female_rabbit_3";
-	}else if(content.get<string>("character") == "Rat") {
+	}else if(character == "Rat") {
 		character_dir = "rat";
-	}else if(content.get<string>("character") == "Female+Rat") {
+	}else if(character == "Female+Rat") {
 		character_dir = "female_rat";
-	}else if(content.get<string>("character") == "Hooded+Rat") {
+	}else if(character == "Hooded+Rat") {
 		character_dir = "hooded_rat";
-	}else if(content.get<string>("character") == "Light+Armored+Dog+Big") {
+	}else if(character == "Light+Armored+Dog+Big") {
 		character_dir = "lt_dog_big";
-	}else if(content.get<string>("character") == "Light+Armored+Dog+Female") {
+	}else if(character == "Light+Armored+Dog+Female") {
 		character_dir = "lt_dog_female";
-	}else if(content.get<string>("character") == "Light+Armored+Dog+Male+1") {
+	}else if(character == "Light+Armored+Dog+Male+1") {
 		character_dir = "lt_dog_male_1";
-	}else if(content.get<string>("character") == "Light+Armored+Dog+Male+2") {
+	}else if(character == "Light+Armored+Dog+Male+2") {
 		character_dir = "lt_dog_male_2";
-	}else if(content.get<string>("character") == "Male+Cat") {
+	}else if(character == "Male+Cat") {
 		character_dir = "male_cat";
-	}else if(content.get<string>("character") == "Female+Cat") {
+	}else if(character == "Female+Cat") {
 		character_dir = "female_cat";
-	}else if(content.get<string>("character") == "Striped+Cat") {
+	}else if(character == "Striped+Cat") {
 		character_dir = "striped_cat";
-	}else if(content.get<string>("character") == "Fancy+Striped+Cat") {
+	}else if(character == "Fancy+Striped+Cat") {
 		character_dir = "fancy_striped_cat";
-	}else if(content.get<string>("character") == "Male+Rabbit+1") {
+	}else if(character == "Male+Rabbit+1") {
 		character_dir = "male_rabbit_1";
-	}else if(content.get<string>("character") == "Male+Rabbit+2") {
+	}else if(character == "Male+Rabbit+2") {
 		character_dir = "male_rabbit_2";
-	}else if(content.get<string>("character") == "Male+Rabbit+3") {
+	}else if(character == "Male+Rabbit+3") {
 		character_dir = "male_rabbit_3";
-	}else if(content.get<string>("character") == "Male+Wolf") {
+	}else if(character == "Male+Wolf") {
 		character_dir = "male_wolf";
-	}else if(content.get<string>("character") == "Civilian") {
+	}else if(character == "Civilian") {
 		character_dir = "civ";
-	}else if(content.get<string>("character") == "Pale+Rabbit+Civilian") {
+	}else if(character == "Pale+Rabbit+Civilian") {
 		character_dir = "pale_rabbit_civ";
-	}else if(content.get<string>("character") == "Rabbot") {
+	}else if(character == "Rabbot") {
 		character_dir = "rabbot";
-	}else if(content.get<string>("character") == "Turner") {
+	}else if(character == "Turner") {
 		character_dir = "turner";
-	}else if(content.get<string>("character") == "Wolf") {
+	}else if(character == "Wolf") {
 		character_dir = "wolf";
 	}
 	this_client.set_character(character_dir);
@@ -362,76 +373,78 @@ void request_handler::HandleSignOn(boost::property_tree::ptree& content, stack<r
 	// Add the client to the client list.
 	client_manager_.add_client(client_pointer);
 	
-	answer.put("type", "SignOn");
-	answer.put("content.refresh_rate", to_string(config_->get_update_refresh_rate()));
-	answer.put("content.welcome_message", config_->get_welcome_message());
-	answer.put("content.username", this_client.get_username());
-	answer.put("content.team", this_client.get_team());
-	answer.put("content.character", character_dir);
-
+	//new_reply.add_to_buffers(SignOn);
+	
+	// answer.put("type", "SignOn");
+	// answer.put("content.refresh_rate", to_string(config_->get_update_refresh_rate()));
+	// answer.put("content.welcome_message", config_->get_welcome_message());
+	// answer.put("content.username", this_client.get_username());
+	// answer.put("content.team", this_client.get_team());
+	// answer.put("content.character", character_dir);
+	
 	//When the signon is successful 
 	this_client.set_signed_on(true);
-
-	new_reply.json = true;
-	new_reply.content= jsonToString(answer);
+	// 
+	// new_reply.json = true;
+	// new_reply.content= jsonToString(answer);
 	rep.push(new_reply);
-
-	
-	// Now add join commands for all other clients in the same group.
-	client_map other_clients = client_manager_.get_clients(client_pointer);
-	
-	cout << "The client manager has " << other_clients.size() << " clients" << endl;
-
-	for(auto& item: other_clients) {
-		reply spawn_character_reply;
-		boost::property_tree::ptree spawn_command;
-		
-		//cout << "Adding SpawnCharacter command!" << endl;
-
-		spawn_command.put("type", "SpawnCharacter");
-		spawn_command.put("content.username", (item.second)->get_username());
-		spawn_command.put("content.team", (item.second)->get_team());
-		spawn_command.put("content.character", (item.second)->get_character());
-		spawn_command.put("content.posx", to_string((item.second)->get_posx()));
-		spawn_command.put("content.posy", to_string((item.second)->get_posy()));
-		spawn_command.put("content.posz", to_string((item.second)->get_posz()));
-
-		spawn_character_reply.json = true;
-		spawn_character_reply.content= jsonToString(spawn_command);
-		//rep.push(spawn_character_reply);
-	}
-
-	// Send message command to other players.
-	reply message_reply;
-	boost::property_tree::ptree new_player_joined_message;
-
-	new_player_joined_message.put("type", "Message");
-	new_player_joined_message.put("name", "server");
-	new_player_joined_message.put("text", client_pointer->get_username() + " has entered the room.");
-	new_player_joined_message.put("notif", "true");
-	
-	message_reply.json = true;
-	message_reply.content= jsonToString(new_player_joined_message);
-
-	//client_manager_.add_command(message, new_player);
-
-	// Write the message to the logs.
-	log::print(new_player_joined_message.get<string>("text"));
-
-	// Send join command to other players.
-	reply spawn_character_reply;
-	boost::property_tree::ptree spawn_command;
-
-	spawn_command.put("type", "SpawnCharacter");
-	spawn_command.put("content.username", this_client.get_username());
-	spawn_command.put("content.team", this_client.get_team());
-	spawn_command.put("content.character", this_client.get_character());
-	spawn_command.put("content.posx", to_string(this_client.get_posx()));
-	spawn_command.put("content.posy", to_string(this_client.get_posy()));
-	spawn_command.put("content.posz", to_string(this_client.get_posz()));
-
-	spawn_character_reply.json = true;
-	spawn_character_reply.content= jsonToString(spawn_command);
+	// 
+	// 
+	// // Now add join commands for all other clients in the same group.
+	// client_map other_clients = client_manager_.get_clients(client_pointer);
+	// 
+	// cout << "The client manager has " << other_clients.size() << " clients" << endl;
+	// 
+	// for(auto& item: other_clients) {
+	// 	reply spawn_character_reply;
+	// 	boost::property_tree::ptree spawn_command;
+	// 	
+	// 	//cout << "Adding SpawnCharacter command!" << endl;
+	// 
+	// 	spawn_command.put("type", "SpawnCharacter");
+	// 	spawn_command.put("content.username", (item.second)->get_username());
+	// 	spawn_command.put("content.team", (item.second)->get_team());
+	// 	spawn_command.put("content.character", (item.second)->get_character());
+	// 	spawn_command.put("content.posx", to_string((item.second)->get_posx()));
+	// 	spawn_command.put("content.posy", to_string((item.second)->get_posy()));
+	// 	spawn_command.put("content.posz", to_string((item.second)->get_posz()));
+	// 
+	// 	spawn_character_reply.json = true;
+	// 	spawn_character_reply.content= jsonToString(spawn_command);
+	// 	//rep.push(spawn_character_reply);
+	// }
+	// 
+	// // Send message command to other players.
+	// reply message_reply;
+	// boost::property_tree::ptree new_player_joined_message;
+	// 
+	// new_player_joined_message.put("type", "Message");
+	// new_player_joined_message.put("name", "server");
+	// new_player_joined_message.put("text", client_pointer->get_username() + " has entered the room.");
+	// new_player_joined_message.put("notif", "true");
+	// 
+	// message_reply.json = true;
+	// message_reply.content= jsonToString(new_player_joined_message);
+	// 
+	// //client_manager_.add_command(message, new_player);
+	// 
+	// // Write the message to the logs.
+	// log::print(new_player_joined_message.get<string>("text"));
+	// 
+	// // Send join command to other players.
+	// reply spawn_character_reply;
+	// boost::property_tree::ptree spawn_command;
+	// 
+	// spawn_command.put("type", "SpawnCharacter");
+	// spawn_command.put("content.username", this_client.get_username());
+	// spawn_command.put("content.team", this_client.get_team());
+	// spawn_command.put("content.character", this_client.get_character());
+	// spawn_command.put("content.posx", to_string(this_client.get_posx()));
+	// spawn_command.put("content.posy", to_string(this_client.get_posy()));
+	// spawn_command.put("content.posz", to_string(this_client.get_posz()));
+	// 
+	// spawn_character_reply.json = true;
+	// spawn_character_reply.content= jsonToString(spawn_command);
 
 	//client_manager_.add_command(join, new_player);
 }
@@ -608,99 +621,30 @@ void request_handler::HandleUpdate(boost::property_tree::ptree& content, stack<r
 	}
 }
 
-void request_handler::handle_request(const request& req, stack<reply>& rep, client& this_client) {
-	if(req.json){
-		//cout << "It's JSON!" << "\n";
-		std::stringstream ss;
-		ss << req.content;
-		boost::property_tree::ptree pt;
-		read_json(ss, pt);
-		handle_json_command(pt , rep, this_client);
-		return;
+void request_handler::handle_request(const request& req, stack<reply>& rep, client& this_client, char* data_, std::size_t bytes_transferred) {
+	cout << "Printing message: " << endl;
+	cout << req.content << endl;
+	
+	for(uint i = 0; i < bytes_transferred; i++){
+		cout << (int)data[i] << " ";
 	}
-	// Decode url to path.
-	string request_path;
-	if(!url_decode(req.uri, request_path)) {
-		rep.push(reply::stock_reply(reply::bad_request));
-		return;
-	}
-
-	if(config_->get_debug()) {
-		//cout << "req.uri: " << req.uri << "\trequest_path: " << request_path << "\n";
-	}
-
-	// Parse post content.
-	if(!req.content.empty()) {
-		if(config_->get_debug()) {
-			//cout << "post: " << req.content << "\n";
+	cout << endl;
+	
+	data_index = 1;
+	data = data_;
+	switch(data[0]){
+		case SignOn :
+		{
+			cout << "Received signon message" << endl;
+			HandleSignOn(rep, this_client);
+			break;
 		}
-		string_map input;
-		string content= req.content;
-
-		string_vector separated_content;
-		separated_content = seperate_string(content, "&");
-
-		for(auto& item: separated_content) {
-			string_vector name_value= seperate_string(item, "=");
-
-			if (name_value.size() == 2) {
-				input[name_value[0]]= name_value[1];
-			}
+		default :
+		{
+			cout << "Received Unknown message" << endl;
 		}
-
-		try {
-			if(handle_command(input, rep)) {
-				return prepare_reply(rep);
-			}
-		} catch(...) {
-			std::cerr << "handle_command error: " << content << "\n";
-			rep.push(reply::stock_reply(reply::bad_request));
-			return;
-		}
-
-		// If we are still in this method there was no command handler.
-		rep.push(reply::stock_reply(reply::not_found));
-		return;
 	}
-
-	// Request path must be absolute and not contain "..".
-	if(request_path.empty() || request_path[0] != '/' || request_path.find("..") != string::npos) {
-		rep.push(reply::stock_reply(reply::bad_request));
-		return;
-	}
-
-	// If path ends in slash (i.e. is a directory) then add "index.html".
-	if(request_path[request_path.size() - 1] == '/') {
-		request_path+= "index.html";
-	}
-
-	// Determine the file extension.
-	size_t last_slash_pos= request_path.find_last_of("/");
-	size_t last_dot_pos= request_path.find_last_of(".");
-	string extension;
-
-	if(last_dot_pos != string::npos && last_dot_pos > last_slash_pos) {
-		extension= request_path.substr(last_dot_pos + 1);
-	}
-
-	// Open the file to send back.
-	string full_path= doc_root_ + request_path;
-	ifstream is(full_path.c_str(), ios::in | ios::binary);
-
-	if(!is) {
-		rep.push(reply::stock_reply(reply::not_found));
-		return;
-	}
-
-	// Fill out the reply to be sent to the client.
-	rep.top().status = reply::ok;
-	char buf[512];
-
-	while(is.read(buf, sizeof(buf)).gcount() > 0) {
-		rep.top().content.append(buf, is.gcount());
-	}
-
-	return prepare_reply(rep, extension);
+	return;
 }
 
 void request_handler::prepare_reply(stack<reply>& rep, string extension) {

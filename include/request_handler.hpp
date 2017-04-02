@@ -30,17 +30,37 @@ class request_handler {
 		explicit request_handler(config_ptr conf, const string& doc_root);
 
 		// Handle a request and produce a reply.
-		void handle_request(const request& req, stack <reply>& rep, client& this_client);
+		void handle_request(const request& req, stack <reply>& rep, client& this_client, char* data_, std::size_t bytes_transferred);
 
 		// Turns a string map into an encoded string.
 		string encode_output(string_map output);
 		string encode_output(string_map_vector output);
+		
+		enum message_type : char { 
+			SignOn = 0,
+			Message = 1,
+			TimeOut = 2,
+			SpawnCharacter = 3,
+			RemoveCharacter = 4,
+			UpdateGame = 5,
+			UpdateSelf = 6,
+			SavePosition = 7,
+			LoadPosition = 8
+		};
+		//Specify how many bytes each variable takes up in the message
+		int username_size = 10;
+		int character_size = 10;
+		int level_size = 10;
+		int version_size = 10;
+		int float_size = 10;
 
 	private:
 		config_ptr config_;
 		string doc_root_;
 		client_manager client_manager_;
 		time_t start_ = time(0);
+		int data_index = 0;
+		char* data;
 
 		string_vector seperate_string(string input, string seperator);
 		string create_new_uid(size_t length);
@@ -49,9 +69,12 @@ class request_handler {
 		void handle_json_command(boost::property_tree::ptree& pt, stack <reply>& rep, client& this_client);
 		void prepare_reply(stack <reply>& rep, string extension = "");
 		string jsonToString(boost::property_tree::ptree& json);
-		void HandleSignOn(boost::property_tree::ptree& content, stack<reply>& rep, client& this_client);
+		void HandleSignOn(stack<reply>& rep, client& this_client);
 		void HandleUpdate(boost::property_tree::ptree& content, stack<reply>& rep, client& this_client);
 		void AddErrorMessage(stack<reply>& rep, string message);
+		string GetString(int size);
+		float GetFloat();
+		char* floatToByteArray(float f);
 };
 
 } // namespace server

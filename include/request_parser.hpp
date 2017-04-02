@@ -33,30 +33,8 @@ class request_parser {
 		/// has been consumed.
 		template <typename InputIterator>
 		std::tuple<result_type, InputIterator> parse(request& req, InputIterator begin, InputIterator end) {
-			try
-		    {
-				std::stringstream ss;
-	  			ss << begin;
-				read_json(ss, pt);
-				//A check to see if the incomming message is JSON.
-				boost::optional< boost::property_tree::ptree& > child = pt.get_child_optional( "type" );
-				if( child )
-				{
-					req.json = true;
-					req.content = begin;
-					result_type result = good;
-					return std::make_tuple(result, begin);
-
-				}
-		    }
-		    catch(boost::property_tree::json_parser::json_parser_error &je)
-		    {}
-			while(begin != end) {
-				result_type result= consume(req, *begin++);
-				if(result == good || result == bad)
-					return std::make_tuple(result, begin);
-			}
-			return std::make_tuple(indeterminate, begin);
+			//TODO check if request is valid.
+			return std::make_tuple(good, begin);
 		}
 
 	private:

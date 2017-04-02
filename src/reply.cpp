@@ -87,7 +87,6 @@ const char crlf[] = { '\r', '\n' };
 } // namespace misc_strings
 
 std::vector<boost::asio::const_buffer> reply::to_buffers() {
-	std::vector<boost::asio::const_buffer> buffers;
 	if(json){
 		buffers.push_back(boost::asio::buffer(content));
 		return buffers;
@@ -103,6 +102,10 @@ std::vector<boost::asio::const_buffer> reply::to_buffers() {
 	buffers.push_back(boost::asio::buffer(misc_strings::crlf));
 	buffers.push_back(boost::asio::buffer(content));
 	return buffers;
+}
+
+void reply::add_to_buffers(char* content){
+	buffers.push_back(boost::asio::buffer(std::string(content)));
 }
 
 namespace stock_replies {
