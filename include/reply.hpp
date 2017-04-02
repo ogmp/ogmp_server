@@ -5,6 +5,7 @@
 #include <string>
 #include <vector>
 #include <boost/asio.hpp>
+#include "request_handler.hpp"
 
 namespace http {
 namespace server {
@@ -44,6 +45,10 @@ struct reply {
 	/// not be changed until the write operation has completed.
 	std::vector<boost::asio::const_buffer> to_buffers();
 	void add_to_buffers(char* content);
+	void add_to_buffers(char content);
+	void add_to_buffers(request_handler::message_type content);
+	void add_to_buffers(float content);
+	void floatToByteArray(char* bytes, float f);
 	std::vector<boost::asio::const_buffer> buffers;
 	/// Get a stock reply.
 	static reply stock_reply(status_type status);

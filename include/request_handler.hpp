@@ -74,7 +74,6 @@ class request_handler {
 		void AddErrorMessage(stack<reply>& rep, string message);
 		string GetString(int size);
 		float GetFloat();
-		char* floatToByteArray(float f);
 };
 
 } // namespace server

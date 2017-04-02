@@ -254,12 +254,6 @@ float request_handler::GetFloat(){
 	return f;
 }
 
-char* request_handler::floatToByteArray(float f) {
-	char *array;
-	array = (char*)(&f);
-	return array;
-}
-
 void request_handler::HandleSignOn(stack<reply>& rep, client& this_client){
 	reply new_reply;
 
@@ -272,13 +266,14 @@ void request_handler::HandleSignOn(stack<reply>& rep, client& this_client){
 	float posy = GetFloat();
 	float posz = GetFloat();
 	
-	cout << "Username " << username << endl;
-	cout << "character " << character << endl;
-	cout << "levelname " << levelname << endl;
-	cout << "version " << version << endl;
-	cout << "posx " << posx << endl;
-	cout << "posy " << posy << endl;
-	cout << "posz " << posz << endl;
+	cout << " Username " << username;
+	cout << " character " << character;
+	cout << " levelname " << levelname;
+	cout << " version " << version;
+	cout << " posx " << posx;
+	cout << " posy " << posy;
+	cout << " posz " << posz;
+	cout << endl;
 
 	string character_dir = "turner";
 	double signon_time= difftime(time(0), start_);
@@ -373,7 +368,9 @@ void request_handler::HandleSignOn(stack<reply>& rep, client& this_client){
 	// Add the client to the client list.
 	client_manager_.add_client(client_pointer);
 	
-	//new_reply.add_to_buffers(SignOn);
+	new_reply.add_to_buffers(SignOn);
+	new_reply.add_to_buffers('g');
+	// new_reply.add_to_buffers(config_->get_update_refresh_rate());
 	
 	// answer.put("type", "SignOn");
 	// answer.put("content.refresh_rate", to_string(config_->get_update_refresh_rate()));
@@ -637,6 +634,21 @@ void request_handler::handle_request(const request& req, stack<reply>& rep, clie
 		{
 			cout << "Received signon message" << endl;
 			HandleSignOn(rep, this_client);
+			break;
+		}
+		case UpdateGame :
+		{
+			cout << "Received UpdateGame message" << endl;
+			break;
+		}
+		case UpdateSelf :
+		{
+			cout << "Received UpdateSelf message" << endl;
+			break;
+		}
+		case Message :
+		{
+			cout << "Received Message message" << endl;
 			break;
 		}
 		default :
