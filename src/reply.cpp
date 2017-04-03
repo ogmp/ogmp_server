@@ -87,83 +87,48 @@ const char crlf[] = { '\r', '\n' };
 } // namespace misc_strings
 
 std::vector<boost::asio::const_buffer> reply::to_buffers() {
-	// if(json){
-	// 	buffers.push_back(boost::asio::buffer(content));
-	// 	return buffers;
-	// }
-	// buffers.push_back(status_strings::to_buffer(status));
-	// for(std::size_t i = 0; i < headers.size(); ++i) {
-	// 	header& h = headers[i];
-	// 	buffers.push_back(boost::asio::buffer(h.name));
-	// 	buffers.push_back(boost::asio::buffer(misc_strings::name_value_separator));
-	// 	buffers.push_back(boost::asio::buffer(h.value));
-	// 	buffers.push_back(boost::asio::buffer(misc_strings::crlf));
-	// }
-	// buffers.push_back(boost::asio::buffer(misc_strings::crlf));
-	// buffers.push_back(boost::asio::buffer(content));
+	std::vector<boost::asio::const_buffer> buffers;
+	buffers.push_back(boost::asio::buffer(buffer));
 	return buffers;
 }
 
-void reply::add_to_buffers(char* content){
-	buffers.push_back(boost::asio::buffer(content, strlen(content)));
+void reply::add_to_buffers(char* content, int size){
+	cout << "array size " << size << endl;
+	for(int i = 0; i < size; i++){
+		buffer.push_back(content[i]);
+	}
 }
 
 void reply::add_to_buffers(request_handler::message_type content){
-	char buffer[] = {content};
-	buffers.push_back(boost::asio::buffer(buffer));
+	buffer.push_back(content);
 }
 
 void reply::add_to_buffers(char content){
-	char buffer[] = {content};
-	cout << "Adding " << buffer[0] << endl;
-	buffers.push_back(boost::asio::buffer(buffer));
+	buffer.push_back(content);
 }
 
 void reply::add_to_buffers(float content){
-	// char* bytes;
-	// floatToByteArray(bytes, content);
-	
-	char bytes[] = { request_handler::message_type::SignOn, request_handler::message_type::SignOn, request_handler::message_type::SignOn, request_handler::message_type::SignOn};
-	std::cout << " " << (int)bytes[0] << std::endl;
-	std::cout << " " << (int)bytes[1] << std::endl;
-	std::cout << " " << (int)bytes[2] << std::endl;
-	std::cout << " " << (int)bytes[3] << std::endl;
-	// std::cout << "new byte array length " << strlen(bytes) << std::endl;
-	// buffers.push_back(boost::asio::buffer(bytes, strlen(bytes)));
-	//buffers.push_back(boost::asio::buffer(bytes));
+	std::cout << "Trying to add a float to the buffer " << content << std::endl;
+	floatToByteArray(content);
 }
 
-void reply::floatToByteArray(char* bytes, float f) {
-	// char* bytes[4];
-	for(int i = 0; i < 4; i++){
-		bytes[i] = ((char*)&f)[i];
+void reply::add_to_buffers(std::string content){
+	std::cout << "Trying to add a string to the buffer " << content << std::endl;
+	for(int i = 0; i < request_handler::string_size; i++){
+		if(i >= strlen(byte_array)){
+			buffer.push_back(0);
+		}else{
+			std::cout << (int)content[i] << " ";
+			buffer.push_back(content[i]);
+		}
 	}
-	
-	// union {
-	// 	float float_variable;
-	// 	char bytes_array[4];
-	// } my_union;
-	// my_union.float_variable = f;
-	// 
-	// bytes = my_union.bytes_array;
-		
-	// my_union u;
-    // u.float_variable = val;
-    // memcpy(bytes_array, u.bytes_array, 4);
-	
-	// uint p = (uint)f;
-	// char* bytes[4];
-	// bytes[0] = p >> 24;
-	// bytes[1] = p >> 16;
-	// bytes[2] = p >>  8;
-	// bytes[3] = p;
+	std::cout << endl;
+}
 
-	// std::cout << "converting " << f << std::endl;
-	// std::cout << " " << (int)bytes[0] << std::endl;
-	// std::cout << " " << (int)bytes[1] << std::endl;
-	// std::cout << " " << (int)bytes[2] << std::endl;
-	// std::cout << " " << (int)bytes[3] << std::endl;
-	// return bytes;
+void reply::floatToByteArray(float f) {
+	for(int i = 0; i < 4; i++){
+		buffer.push_back(((char*)&f)[i]);
+	}
 }
 
 namespace stock_replies {

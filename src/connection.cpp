@@ -65,7 +65,6 @@ void connection::do_write() {
 	reply& current_reply = replies_.top();
 	
 	cout << "Writing socket: " << current_reply.content << endl;
-	//cout << "Size: " << boost::asio::buffer_size(current_reply.to_buffers()) << endl;
 	
 	boost::asio::async_write(socket_, current_reply.to_buffers(),
 	[this, self, current_reply](boost::system::error_code ec, std::size_t) {

@@ -283,7 +283,7 @@ void request_handler::HandleSignOn(stack<reply>& rep, client& this_client){
 	
 	for(auto& item: all_clients) {
 		if((item.second)->get_username() == username) {
-			AddErrorMessage(rep, "Already a user with that username!");
+			//AddErrorMessage(rep, "Already a user with that username!");
 			// Stop and send reply.
 			break;
 		}
@@ -369,15 +369,12 @@ void request_handler::HandleSignOn(stack<reply>& rep, client& this_client){
 	client_manager_.add_client(client_pointer);
 	
 	new_reply.add_to_buffers(SignOn);
-	new_reply.add_to_buffers('g');
-	// new_reply.add_to_buffers(config_->get_update_refresh_rate());
+	new_reply.add_to_buffers(config_->get_update_refresh_rate());
+	new_reply.add_to_buffers(this_client.get_username());
+	new_reply.add_to_buffers(config_->get_welcome_message());
+	new_reply.add_to_buffers(this_client.get_team());
+	new_reply.add_to_buffers(character_dir);
 	
-	// answer.put("type", "SignOn");
-	// answer.put("content.refresh_rate", to_string(config_->get_update_refresh_rate()));
-	// answer.put("content.welcome_message", config_->get_welcome_message());
-	// answer.put("content.username", this_client.get_username());
-	// answer.put("content.team", this_client.get_team());
-	// answer.put("content.character", character_dir);
 	
 	//When the signon is successful 
 	this_client.set_signed_on(true);

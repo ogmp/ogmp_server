@@ -20,6 +20,13 @@ using namespace std;
 struct reply;
 struct request;
 
+// extern int username_size;
+// extern int character_size;
+// extern int level_size;
+// extern int version_size;
+// extern int float_size;
+// extern int string_size;
+
 // The common handler for all incoming requests.
 class request_handler {
 	public:
@@ -47,12 +54,14 @@ class request_handler {
 			SavePosition = 7,
 			LoadPosition = 8
 		};
+		
 		//Specify how many bytes each variable takes up in the message
-		int username_size = 10;
-		int character_size = 10;
-		int level_size = 10;
-		int version_size = 10;
-		int float_size = 10;
+		const static int username_size = 10;
+		const static int character_size = 10;
+		const static int level_size = 10;
+		const static int version_size = 10;
+		const static int float_size = 10;
+		const static int string_size = 20;
 
 	private:
 		config_ptr config_;
