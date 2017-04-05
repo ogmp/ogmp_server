@@ -1,4 +1,5 @@
 #include "client.hpp"
+#include "reply.hpp"
 
 namespace http {
 namespace server {
@@ -34,6 +35,10 @@ void client::set_team(string team) {
 
 void client::add_command(string_map command) {
 	commands_.push_back(command);
+}
+
+void client::add_to_inbox(reply& command) {
+	inbox_.push_back(command);
 }
 
 void client::set_last_updated(double current_seconds) {

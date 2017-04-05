@@ -95,123 +95,123 @@ bool request_handler::url_decode(const string& in, string& out) {
 }
 
 bool request_handler::handle_command(string_map& input, stack <reply>& rep) {
-	// Remove old clients that are not responding.
-	client_map inactive_clients= client_manager_.pop_inactive_clients(start_);
-	reply new_reply;
-	// Announce quits.
-	for(auto& item: inactive_clients) {
-		// Add part message to all clients that are in the same
-		// group as the timeouted client.
-		string_map message;
-
-		message["type"] = "Message";
-		message["name"] = "server";
-		message["text"] = (item.second)->get_username() + " has left the room.";
-		message["notif"] = "true";
-
-		client_manager_.add_command(message, item.second);
-
-		// Also add a part command.
-		string_map part;
-
-		part["type"] = "RemoveCharacter";
-		part["username"] = (item.second)->get_username();
-
-		client_manager_.add_command(part, item.second);
-
-		// Write the message to the logs.
-		log::print(message["text"]);
-	}
-
-	// First we check for commands that do not require to be an active player.
-	if(input["type"] == "ListUsers") {
-		client_map clients= client_manager_.get_clients();
-
-		string_map_vector answer;
-
-		for(auto& item: clients) {
-			string_map user;
-
-			user["character"] = (item.second)->get_character();
-			user["username"] = (item.second)->get_username();
-			user["level"] = (item.second)->get_level();
-
-			answer.push_back(user);
-		}
-
-		new_reply.content= encode_output(answer);
-
-		// Stop and send reply.
-		return true;
-	}
-
-	// Everything that follows now requires a valid uid (except signon).
-	client_ptr player= client_manager_.get_client(input["uid"]);
-
-	if(input["type"] != "SignOn") {
-		if(!player) {
-			string_map answer;
-
-			answer["type"] = "Timeout";
-
-			new_reply.content= encode_output(answer);
-
-			// Stop and send reply.
-			return true;
-		}
-	}
-
-	if(input["type"] == "SignOn") {
-	} else if(input["type"] ==  "Update") {
-	} else if(input["type"] == "SavePosition") {
-		// Don't continue if disabled.
-		if(!config_->get_allow_teleport()) {
-			return true;
-		}
-
-		// Create copies of the client coordinates.
-		player->set_saved_posx(player->get_posx());
-		player->set_saved_posy(player->get_posy());
-		player->set_saved_posz(player->get_posz());
-
-		// Stop and send reply.
-		return true;
-	} else if(input["type"] == "LoadPosition") {
-		// Don't continue if disabled.
-		if(!config_->get_allow_teleport()) {
-			return true;
-		}
-
-		// Create answer.
-		string_map answer;
-
-		answer["type"] = "LoadPosition";
-		answer["posx"] = to_string(player->get_saved_posx());
-		answer["posy"] = to_string(player->get_saved_posy());
-		answer["posz"] = to_string(player->get_saved_posz());
-
-		new_reply.content= encode_output(answer);
-
-		// Stop and send reply.
-		return true;
-	} else if(input["type"] == "Message") {
-		// Create message.
-		string_map message;
-
-		message["type"] = "Message";
-		message["name"] = input["name"];
-		message["text"] = input["text"];
-		message["notif"] = "false";
-
-		// Send message to everyone except the current client.
-		client_manager_.add_command(message, player);
-
-		// Write the message to the logs.
-		log::print(message["name"] + ": " + message["text"]);
-
-		// Stop and send reply.
-		return true;
-	}
+	// // Remove old clients that are not responding.
+	// client_map inactive_clients= client_manager_.pop_inactive_clients(start_);
+	// reply new_reply;
+	// // Announce quits.
+	// for(auto& item: inactive_clients) {
+	// 	// Add part message to all clients that are in the same
+	// 	// group as the timeouted client.
+	// 	string_map message;
+	// 
+	// 	message["type"] = "Message";
+	// 	message["name"] = "server";
+	// 	message["text"] = (item.second)->get_username() + " has left the room.";
+	// 	message["notif"] = "true";
+	// 
+	// 	client_manager_.add_command(message, item.second);
+	// 
+	// 	// Also add a part command.
+	// 	string_map part;
+	// 
+	// 	part["type"] = "RemoveCharacter";
+	// 	part["username"] = (item.second)->get_username();
+	// 
+	// 	client_manager_.add_command(part, item.second);
+	// 
+	// 	// Write the message to the logs.
+	// 	log::print(message["text"]);
+	// }
+	// 
+	// // First we check for commands that do not require to be an active player.
+	// if(input["type"] == "ListUsers") {
+	// 	client_map clients= client_manager_.get_clients();
+	// 
+	// 	string_map_vector answer;
+	// 
+	// 	for(auto& item: clients) {
+	// 		string_map user;
+	// 
+	// 		user["character"] = (item.second)->get_character();
+	// 		user["username"] = (item.second)->get_username();
+	// 		user["level"] = (item.second)->get_level();
+	// 
+	// 		answer.push_back(user);
+	// 	}
+	// 
+	// 	new_reply.content= encode_output(answer);
+	// 
+	// 	// Stop and send reply.
+	// 	return true;
+	// }
+	// 
+	// // Everything that follows now requires a valid uid (except signon).
+	// client_ptr player= client_manager_.get_client(input["uid"]);
+	// 
+	// if(input["type"] != "SignOn") {
+	// 	if(!player) {
+	// 		string_map answer;
+	// 
+	// 		answer["type"] = "Timeout";
+	// 
+	// 		new_reply.content= encode_output(answer);
+	// 
+	// 		// Stop and send reply.
+	// 		return true;
+	// 	}
+	// }
+	// 
+	// if(input["type"] == "SignOn") {
+	// } else if(input["type"] ==  "Update") {
+	// } else if(input["type"] == "SavePosition") {
+	// 	// Don't continue if disabled.
+	// 	if(!config_->get_allow_teleport()) {
+	// 		return true;
+	// 	}
+	// 
+	// 	// Create copies of the client coordinates.
+	// 	player->set_saved_posx(player->get_posx());
+	// 	player->set_saved_posy(player->get_posy());
+	// 	player->set_saved_posz(player->get_posz());
+	// 
+	// 	// Stop and send reply.
+	// 	return true;
+	// } else if(input["type"] == "LoadPosition") {
+	// 	// Don't continue if disabled.
+	// 	if(!config_->get_allow_teleport()) {
+	// 		return true;
+	// 	}
+	// 
+	// 	// Create answer.
+	// 	string_map answer;
+	// 
+	// 	answer["type"] = "LoadPosition";
+	// 	answer["posx"] = to_string(player->get_saved_posx());
+	// 	answer["posy"] = to_string(player->get_saved_posy());
+	// 	answer["posz"] = to_string(player->get_saved_posz());
+	// 
+	// 	new_reply.content= encode_output(answer);
+	// 
+	// 	// Stop and send reply.
+	// 	return true;
+	// } else if(input["type"] == "Message") {
+	// 	// Create message.
+	// 	string_map message;
+	// 
+	// 	message["type"] = "Message";
+	// 	message["name"] = input["name"];
+	// 	message["text"] = input["text"];
+	// 	message["notif"] = "false";
+	// 
+	// 	// Send message to everyone except the current client.
+	// 	client_manager_.add_command(message, player);
+	// 
+	// 	// Write the message to the logs.
+	// 	log::print(message["name"] + ": " + message["text"]);
+	// 
+	// 	// Stop and send reply.
+	// 	return true;
+	// }
 
 	return false;
 }
@@ -373,74 +373,59 @@ void request_handler::HandleSignOn(stack<reply>& rep, client& this_client){
 	new_reply.add_to_buffers(this_client.get_username());
 	new_reply.add_to_buffers(config_->get_welcome_message());
 	new_reply.add_to_buffers(this_client.get_team());
-	new_reply.add_to_buffers(character_dir);
+	new_reply.add_to_buffers(this_client.get_character());
 	
 	
 	//When the signon is successful 
 	this_client.set_signed_on(true);
-	// 
-	// new_reply.json = true;
-	// new_reply.content= jsonToString(answer);
 	rep.push(new_reply);
-	// 
-	// 
-	// // Now add join commands for all other clients in the same group.
-	// client_map other_clients = client_manager_.get_clients(client_pointer);
-	// 
-	// cout << "The client manager has " << other_clients.size() << " clients" << endl;
-	// 
-	// for(auto& item: other_clients) {
-	// 	reply spawn_character_reply;
-	// 	boost::property_tree::ptree spawn_command;
-	// 	
-	// 	//cout << "Adding SpawnCharacter command!" << endl;
-	// 
-	// 	spawn_command.put("type", "SpawnCharacter");
-	// 	spawn_command.put("content.username", (item.second)->get_username());
-	// 	spawn_command.put("content.team", (item.second)->get_team());
-	// 	spawn_command.put("content.character", (item.second)->get_character());
-	// 	spawn_command.put("content.posx", to_string((item.second)->get_posx()));
-	// 	spawn_command.put("content.posy", to_string((item.second)->get_posy()));
-	// 	spawn_command.put("content.posz", to_string((item.second)->get_posz()));
-	// 
-	// 	spawn_character_reply.json = true;
-	// 	spawn_character_reply.content= jsonToString(spawn_command);
-	// 	//rep.push(spawn_character_reply);
-	// }
-	// 
-	// // Send message command to other players.
-	// reply message_reply;
-	// boost::property_tree::ptree new_player_joined_message;
-	// 
-	// new_player_joined_message.put("type", "Message");
-	// new_player_joined_message.put("name", "server");
-	// new_player_joined_message.put("text", client_pointer->get_username() + " has entered the room.");
-	// new_player_joined_message.put("notif", "true");
-	// 
-	// message_reply.json = true;
-	// message_reply.content= jsonToString(new_player_joined_message);
-	// 
-	// //client_manager_.add_command(message, new_player);
-	// 
-	// // Write the message to the logs.
-	// log::print(new_player_joined_message.get<string>("text"));
-	// 
-	// // Send join command to other players.
-	// reply spawn_character_reply;
-	// boost::property_tree::ptree spawn_command;
-	// 
-	// spawn_command.put("type", "SpawnCharacter");
-	// spawn_command.put("content.username", this_client.get_username());
-	// spawn_command.put("content.team", this_client.get_team());
-	// spawn_command.put("content.character", this_client.get_character());
-	// spawn_command.put("content.posx", to_string(this_client.get_posx()));
-	// spawn_command.put("content.posy", to_string(this_client.get_posy()));
-	// spawn_command.put("content.posz", to_string(this_client.get_posz()));
-	// 
-	// spawn_character_reply.json = true;
-	// spawn_character_reply.content= jsonToString(spawn_command);
+	
+	
+	// Now add join commands for all other clients in the same group.
+	client_map other_clients = client_manager_.get_clients(client_pointer);
+	
+	cout << "The client manager has " << other_clients.size() << " clients" << endl;
+	
+	for(auto& item: other_clients) {
+		reply spawn_character_reply;
+		
+		cout << "Adding SpawnCharacter command for all the character that are already on the server!" << endl;
+		
+		spawn_character_reply.add_to_buffers(SpawnCharacter);
+		spawn_character_reply.add_to_buffers(this_client.get_username());
+		spawn_character_reply.add_to_buffers(this_client.get_username());
+		spawn_character_reply.add_to_buffers(this_client.get_character());
+		spawn_character_reply.add_to_buffers(this_client.get_posx());
+		spawn_character_reply.add_to_buffers(this_client.get_posy());
+		spawn_character_reply.add_to_buffers(this_client.get_posz());
+		rep.push(spawn_character_reply);
+	}
+	
+	// Send message command to other players.
+	reply message_reply;
+	
+	message_reply.add_to_buffers(Message);
+	message_reply.add_to_buffers("server");
+	message_reply.add_to_buffers(client_pointer->get_username() + " has entered the room.");
+	message_reply.add_to_buffers(true);
+	// client_manager_.add_command(message_reply, client_pointer);
+	client_manager_.add_to_inbox(message_reply, client_pointer);
+	
+	// Write the message to the logs.
+	log::print(client_pointer->get_username() + " has entered the room.");
+	
+	// Send join command to other players.
+	reply spawn_character_reply;
+	
+	spawn_character_reply.add_to_buffers(SpawnCharacter);
+	spawn_character_reply.add_to_buffers(this_client.get_username());
+	spawn_character_reply.add_to_buffers(this_client.get_team());
+	spawn_character_reply.add_to_buffers(this_client.get_character());
+	spawn_character_reply.add_to_buffers(this_client.get_posx());
+	spawn_character_reply.add_to_buffers(this_client.get_posy());
+	spawn_character_reply.add_to_buffers(this_client.get_posz());
 
-	//client_manager_.add_command(join, new_player);
+	client_manager_.add_to_inbox(spawn_character_reply, client_pointer);
 }
 
 void request_handler::HandleUpdate(boost::property_tree::ptree& content, stack<reply>& rep, client& this_client){

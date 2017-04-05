@@ -2,6 +2,7 @@
 #define HTTP_CLIENT_HPP
 
 #include "shared.hpp"
+//#include "reply.hpp"
 #include <string>
 #include <vector>
 #include <boost/shared_ptr.hpp>
@@ -10,6 +11,8 @@ namespace http {
 namespace server {
 
 using namespace std;
+
+struct reply;
 
 class client {
 	public:
@@ -20,6 +23,7 @@ class client {
 		void set_username(string username);
 		void set_team(string team);
 		void add_command(string_map command);
+		void add_to_inbox(reply& command);
 		void set_last_updated(double current_seconds);
 		void set_character(string character);
 
@@ -118,6 +122,7 @@ class client {
 		double last_updated_, time_of_death_;
 		int knocked_out_, lives_, ragdoll_type_, blood_delay_, state_;
 		string_map_vector commands_;
+		vector<reply> inbox_;
 };
 
 typedef boost::shared_ptr<client> client_ptr;

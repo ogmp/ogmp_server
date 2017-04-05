@@ -50,6 +50,7 @@ struct reply {
 	void add_to_buffers(request_handler::message_type content);
 	void add_to_buffers(float content);
 	void add_to_buffers(std::string content);
+	void add_to_buffers(bool content);
 	void floatToByteArray(float f);
 	/// Get a stock reply.
 	static reply stock_reply(status_type status);

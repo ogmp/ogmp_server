@@ -34,6 +34,27 @@ void client_manager::add_command(string_map command, client_ptr initiator) {
 	}
 }
 
+void client_manager::add_to_inbox(reply& command, client_ptr initiator) {
+	boost::unique_lock<boost::mutex> scoped_lock(clients_mutex_);
+
+	for(auto& item: clients_) {
+		if(initiator) {
+			// Skip initiator.
+			if(item.second == initiator) {
+				continue;
+			}
+
+			// Skip clients that are not on the same level as initiator.
+			if((item.second)->get_level() != initiator->get_level()) {
+				continue;
+			}
+		}
+
+		(item.second)->add_to_inbox(command);
+	}
+}
+
+
 client_ptr client_manager::get_client(string uid) {
 	boost::unique_lock<boost::mutex> scoped_lock(clients_mutex_);
 

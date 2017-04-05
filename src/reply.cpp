@@ -114,15 +114,23 @@ void reply::add_to_buffers(float content){
 
 void reply::add_to_buffers(std::string content){
 	std::cout << "Trying to add a string to the buffer " << content << std::endl;
-	for(int i = 0; i < request_handler::string_size; i++){
-		if(i >= strlen(byte_array)){
-			buffer.push_back(0);
-		}else{
-			std::cout << (int)content[i] << " ";
-			buffer.push_back(content[i]);
-		}
+	const char* byte_array = content.c_str();
+	//The size of the string is send first.
+	buffer.push_back(strlen(byte_array));
+	for(int i = 0; i < strlen(byte_array); i++){
+		// std::cout << (int)content[i] << " ";
+		buffer.push_back(content[i]);
 	}
-	std::cout << endl;
+	// std::cout << endl;
+}
+
+void reply::add_to_buffers(bool content){
+	std::cout << "Trying to add a boolean to the buffer " << content << std::endl;
+	if(content){
+		buffer.push_back(1);
+	}else{
+		buffer.push_back(0);
+	}
 }
 
 void reply::floatToByteArray(float f) {
