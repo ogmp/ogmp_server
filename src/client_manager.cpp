@@ -80,7 +80,6 @@ client_map client_manager::get_clients(client_ptr initiator) {
 	for(auto& item: clients_) {
 		// Skip initiator.
 		if(item.second->get_username() == initiator->get_username()) {
-			cout << "continue" << endl;
 			continue;
 		}
 

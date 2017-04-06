@@ -30,10 +30,10 @@ void connection::do_read() {
 				request_, buffer_.data(), buffer_.data() + bytes_transferred);
 				// cout << "Data: " << buffer_.data() << endl;
 				// cout << "Nr bytes " << bytes_transferred << endl;
-				cout << "First byte " << (int)buffer_[0] << endl;
+				// cout << "First byte " << (int)buffer_[0] << endl;
 				
 				if(result == request_parser::good) {
-					cout << "Request good" << endl;
+					// cout << "Request good" << endl;
 					request_handler_.handle_request(request_, replies_, this_client_, buffer_.data(), bytes_transferred);
 					do_write();
 					//std::fill(buffer_.data(), buffer_.data() + bytes_transferred, 0);

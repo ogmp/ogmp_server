@@ -70,7 +70,9 @@ class client {
 		string get_username();
 		string get_team();
 		string_map get_command();
+		reply get_inbox_message();
 		int get_number_of_commands();
+		int get_number_of_inbox_messages();
 		double get_last_updated();
 		string get_character();
 

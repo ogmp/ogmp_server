@@ -108,12 +108,12 @@ void reply::add_to_buffers(char content){
 }
 
 void reply::add_to_buffers(float content){
-	std::cout << "Trying to add a float to the buffer " << content << std::endl;
+	// std::cout << "Trying to add a float to the buffer " << content << std::endl;
 	floatToByteArray(content);
 }
 
 void reply::add_to_buffers(std::string content){
-	std::cout << "Trying to add a string to the buffer " << content << std::endl;
+	// std::cout << "Trying to add a string to the buffer " << content << std::endl;
 	const char* byte_array = content.c_str();
 	//The size of the string is send first.
 	buffer.push_back(strlen(byte_array));
@@ -125,12 +125,17 @@ void reply::add_to_buffers(std::string content){
 }
 
 void reply::add_to_buffers(bool content){
-	std::cout << "Trying to add a boolean to the buffer " << content << std::endl;
+	// std::cout << "Trying to add a boolean to the buffer " << content << std::endl;
 	if(content){
 		buffer.push_back(1);
 	}else{
 		buffer.push_back(0);
 	}
+}
+
+void reply::add_to_buffers(int content){
+	// std::cout << "Trying to add a integer to the buffer " << content << std::endl;
+	buffer.push_back(content);
 }
 
 void reply::floatToByteArray(float f) {

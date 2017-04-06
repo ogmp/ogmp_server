@@ -20,13 +20,6 @@ using namespace std;
 struct reply;
 struct request;
 
-// extern int username_size;
-// extern int character_size;
-// extern int level_size;
-// extern int version_size;
-// extern int float_size;
-// extern int string_size;
-
 // The common handler for all incoming requests.
 class request_handler {
 	public:
@@ -52,7 +45,9 @@ class request_handler {
 			UpdateGame = 5,
 			UpdateSelf = 6,
 			SavePosition = 7,
-			LoadPosition = 8
+			LoadPosition = 8,
+			UpdateCharacter = 9,
+			Error = 10
 		};
 		
 		//Specify how many bytes each variable takes up in the message
@@ -75,14 +70,14 @@ class request_handler {
 		string create_new_uid(size_t length);
 		bool url_decode(const string& in, string& out);
 		bool handle_command(string_map& input, stack <reply>& rep);
-		void handle_json_command(boost::property_tree::ptree& pt, stack <reply>& rep, client& this_client);
 		void prepare_reply(stack <reply>& rep, string extension = "");
-		string jsonToString(boost::property_tree::ptree& json);
 		void HandleSignOn(stack<reply>& rep, client& this_client);
-		void HandleUpdate(boost::property_tree::ptree& content, stack<reply>& rep, client& this_client);
+		void HandleUpdate(stack<reply>& rep, client& this_client);
 		void AddErrorMessage(stack<reply>& rep, string message);
-		string GetString(int size);
+		string GetString();
 		float GetFloat();
+		bool GetBool();
+		int GetInt();
 };
 
 } // namespace server

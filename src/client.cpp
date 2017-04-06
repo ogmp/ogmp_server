@@ -210,6 +210,11 @@ string_map client::get_command() {
 	commands_.pop_back();
 	return command;
 }
+reply client::get_inbox_message() {
+	reply message = inbox_.back();
+	inbox_.pop_back();
+	return message;
+}
 
 string client::get_character() {
 	return character_;
@@ -221,6 +226,10 @@ double client::get_last_updated() {
 
 int client::get_number_of_commands() {
 	return commands_.size();
+}
+
+int client::get_number_of_inbox_messages() {
+	return inbox_.size();
 }
 
 float client::get_posx() {

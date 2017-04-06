@@ -216,29 +216,16 @@ bool request_handler::handle_command(string_map& input, stack <reply>& rep) {
 	return false;
 }
 
-void request_handler::handle_json_command(boost::property_tree::ptree& pt, stack<reply>& rep, client& this_client){
-
-	
-}
-
 void request_handler::AddErrorMessage(stack<reply>& rep, string message){
 	reply new_reply;
-	boost::property_tree::ptree answer;
-	answer.put("type", "Error");
-	answer.put("content.message", message);
-	new_reply.json = true;
-	new_reply.content= jsonToString(answer);
+	new_reply.add_to_buffers(Error);
+	new_reply.add_to_buffers(message);
 	rep.push(new_reply);
 }
 
-string request_handler::jsonToString(boost::property_tree::ptree& json){
-	std::ostringstream oss;
-	write_json(oss, json, false);
-	//cout << "Reply: " << oss.str() << endl;
-	return oss.str();
-}
-
-string request_handler::GetString(int size){
+string request_handler::GetString(){
+	int size = (int)data[data_index];
+	data_index++;
 	string output;
 	for(int i = 0; i < size; i++, data_index++){
 		output += data[data_index];
@@ -254,13 +241,28 @@ float request_handler::GetFloat(){
 	return f;
 }
 
+bool request_handler::GetBool(){
+	bool value = false;
+	if(data[data_index] == 0){
+		value = true;
+	}
+	data_index++;
+	return value;
+}
+
+int request_handler::GetInt(){
+	int value = (int)data[data_index];
+	data_index++;
+	return value;
+}
+
 void request_handler::HandleSignOn(stack<reply>& rep, client& this_client){
 	reply new_reply;
 
-	string username = GetString(username_size);
-	string character = GetString(character_size);
-	string levelname = GetString(level_size);
-	string version = GetString(version_size);
+	string username = GetString();
+	string character = GetString();
+	string levelname = GetString();
+	string version = GetString();
 	
 	float posx = GetFloat();
 	float posy = GetFloat();
@@ -283,9 +285,9 @@ void request_handler::HandleSignOn(stack<reply>& rep, client& this_client){
 	
 	for(auto& item: all_clients) {
 		if((item.second)->get_username() == username) {
-			//AddErrorMessage(rep, "Already a user with that username!");
+			AddErrorMessage(rep, "Already a user with that username!");
 			// Stop and send reply.
-			break;
+			return;
 		}
 	}
 	
@@ -408,7 +410,6 @@ void request_handler::HandleSignOn(stack<reply>& rep, client& this_client){
 	message_reply.add_to_buffers("server");
 	message_reply.add_to_buffers(client_pointer->get_username() + " has entered the room.");
 	message_reply.add_to_buffers(true);
-	// client_manager_.add_command(message_reply, client_pointer);
 	client_manager_.add_to_inbox(message_reply, client_pointer);
 	
 	// Write the message to the logs.
@@ -428,63 +429,54 @@ void request_handler::HandleSignOn(stack<reply>& rep, client& this_client){
 	client_manager_.add_to_inbox(spawn_character_reply, client_pointer);
 }
 
-void request_handler::HandleUpdate(boost::property_tree::ptree& content, stack<reply>& rep, client& this_client){
+void request_handler::HandleUpdate(stack<reply>& rep, client& this_client){
 	// Update player states.
-	this_client.set_posx(stof(content.get<string>("posx")));
-	this_client.set_posy(stof(content.get<string>("posy")));
-	this_client.set_posz(stof(content.get<string>("posz")));
-	this_client.set_dirx(stof(content.get<string>("dirx")));
-	this_client.set_dirz(stof(content.get<string>("dirz")));
 
-	this_client.set_crouch((content.get<string>("crouch") == "true"));
-	this_client.set_jump((content.get<string>("jump") == "true"));
-	this_client.set_attack((content.get<string>("attack") == "true"));
-	this_client.set_grab((content.get<string>("grab") == "true"));
-	this_client.set_item((content.get<string>("item") == "true"));
-	this_client.set_drop((content.get<string>("drop") == "true"));
-	this_client.set_roll((content.get<string>("roll") == "true"));
-	this_client.set_jumpoffwall((content.get<string>("offwall") == "true"));
-	this_client.set_activeblock((content.get<string>("activeblock") == "true"));
+	this_client.set_posx(GetFloat());
+	this_client.set_posy(GetFloat());
+	this_client.set_posz(GetFloat());
+	this_client.set_dirx(GetFloat());
+	this_client.set_dirz(GetFloat());
+
+	this_client.set_crouch(GetBool());
+	this_client.set_jump(GetBool());
+	this_client.set_attack(GetBool());
+	this_client.set_grab(GetBool());
+	this_client.set_item(GetBool());
+	this_client.set_drop(GetBool());
+	this_client.set_roll(GetBool());
+	this_client.set_jumpoffwall(GetBool());
+	this_client.set_activeblock(GetBool());
 	
 	if((this_client.get_time_of_death() < 1) || (difftime(time(0), this_client.get_time_of_death()) > 10)) {
 		// Do not allow this_clients to increase some parts of their health.
-		if(stof(content.get<string>("blood_health")) < this_client.get_blood_health()) {
-			this_client.set_blood_health(stof(content.get<string>("blood_health")));
+		if(GetFloat() < this_client.get_blood_health()) {
+			this_client.set_blood_health(GetFloat());
 		}
-		if(stof(content.get<string>("permanent_health")) < this_client.get_permanent_health()) {
-			this_client.set_permanent_health(stof(content.get<string>("permanent_health")));
+		if(GetFloat() < this_client.get_permanent_health()) {
+			this_client.set_permanent_health(GetFloat());
 		}
-		if(stoi(content.get<string>("knocked_out")) > this_client.get_knocked_out()) {
-			this_client.set_knocked_out(stoi(content.get<string>("knocked_out")));
+		if(GetFloat() > this_client.get_knocked_out()) {
+			this_client.set_knocked_out(GetFloat());
 		}
-		if(stoi(content.get<string>("lives")) < this_client.get_lives()) {
-			this_client.set_lives(stoi(content.get<string>("lives")));
+		if(GetInt() < this_client.get_lives()) {
+			this_client.set_lives(GetInt());
 		}
-		this_client.set_blood_damage(stof(content.get<string>("blood_damage")));
-		this_client.set_block_health(stof(content.get<string>("block_health")));
-		this_client.set_temp_health(stof(content.get<string>("temp_health")));
+		this_client.set_blood_damage(GetFloat());
+		this_client.set_block_health(GetFloat());
+		this_client.set_temp_health(GetFloat());
 	}
 
-	this_client.set_blood_delay(stoi(content.get<string>("blood_delay")));
-	this_client.set_cut_throat((content.get<string>("cut_throat") == "true"));
-	this_client.set_state(stoi(content.get<string>("state")));
+	this_client.set_blood_delay(GetInt());
+	this_client.set_cut_throat(GetInt());
+	this_client.set_state(GetInt());
 
 	client_ptr client_pointer = boost::make_shared<client>(this_client);
 
 	// Add commands from queue if available.
-	while(this_client.get_number_of_commands() != 0) {
-		reply command_reply;
-		boost::property_tree::ptree command_tree;
-		
-		string_map message = this_client.get_command();
-		
-		command_tree.put("type", message["type"]);
-		command_tree.put("content.text", message["text"]);
-		command_tree.put("content.notif", message["notif"]);
-		
-		command_reply.json = true;
-		command_reply.content= jsonToString(command_tree);
-		rep.push(command_reply);
+	while(this_client.get_number_of_inbox_messages() != 0) {
+		reply message = this_client.get_inbox_message();
+		rep.push(message);
 	}
 
 	// Check if the player died (we consider unconscious as dead for now).
@@ -499,17 +491,17 @@ void request_handler::HandleUpdate(boost::property_tree::ptree& content, stack<r
 			this_client.set_time_of_death(time(0));
 
 			// Send message to all players in the group.
-			string_map message;
+			reply message_reply;
+			
+			message_reply.add_to_buffers(Message);
+			message_reply.add_to_buffers("server");
+			message_reply.add_to_buffers(client_pointer->get_username() + " has died.");
+			message_reply.add_to_buffers(true);
 
-			message["type"] = "Message";
-			message["name"] = "server";
-			message["text"] = this_client.get_username() + " has died.";
-			message["notif"] = "true";
-
-			client_manager_.add_command(message, client_pointer);
+			client_manager_.add_to_inbox(message_reply, client_pointer);
 
 			// Also send the message to player himself.
-			this_client.add_command(message);
+			this_client.add_to_inbox(message_reply);
 		} else {
 			// Revive the player after some seconds (experimental).
 			if(difftime(time(0), this_client.get_time_of_death()) > 5) {
@@ -534,24 +526,20 @@ void request_handler::HandleUpdate(boost::property_tree::ptree& content, stack<r
 	
 	// Send health back to player.
 	reply updateself_reply;
-	boost::property_tree::ptree updateself_tree;
 	
-	updateself_tree.put("type", "UpdateSelf");
-	updateself_tree.put("content.blood_damage", to_string(this_client.get_blood_damage()));
-	updateself_tree.put("content.blood_health", to_string(this_client.get_blood_health()));
-	updateself_tree.put("content.block_health", to_string(this_client.get_block_health()));
-	updateself_tree.put("content.temp_health", to_string(this_client.get_temp_health()));
-	updateself_tree.put("content.permanent_health", to_string(this_client.get_permanent_health()));
-	updateself_tree.put("content.knocked_out", to_string(this_client.get_knocked_out()));
-	updateself_tree.put("content.lives", to_string(this_client.get_lives()));
-	updateself_tree.put("content.blood_amount", to_string(this_client.get_blood_amount()));
-	updateself_tree.put("content.recovery_time", to_string(this_client.get_recovery_time()));
-	updateself_tree.put("content.roll_recovery_time", to_string(this_client.get_roll_recovery_time()));
-	updateself_tree.put("content.remove_blood", to_string(this_client.get_remove_blood()));
-	updateself_tree.put("content.cut_throat", to_string(this_client.get_cut_throat()));
+	updateself_reply.add_to_buffers(UpdateSelf);
+	updateself_reply.add_to_buffers(this_client.get_blood_damage());
+	updateself_reply.add_to_buffers(this_client.get_blood_health());
+	updateself_reply.add_to_buffers(this_client.get_block_health());
+	updateself_reply.add_to_buffers(this_client.get_temp_health());
+	updateself_reply.add_to_buffers(this_client.get_permanent_health());
+	updateself_reply.add_to_buffers(this_client.get_lives());
+	updateself_reply.add_to_buffers(this_client.get_blood_amount());
+	updateself_reply.add_to_buffers(this_client.get_recovery_time());
+	updateself_reply.add_to_buffers(this_client.get_roll_recovery_time());
+	updateself_reply.add_to_buffers(this_client.get_remove_blood());
+	updateself_reply.add_to_buffers(this_client.get_cut_throat());
 
-	updateself_reply.json = true;
-	updateself_reply.content= jsonToString(updateself_tree);
 	//TODO maybe just send this when needed.
 	//rep.push(updateself_reply);
 
@@ -560,42 +548,38 @@ void request_handler::HandleUpdate(boost::property_tree::ptree& content, stack<r
 
 	for(auto& item: other_clients) {
 		reply update_reply;
-		boost::property_tree::ptree update_tree;
 		
-		update_tree.put("type", "Update");
+		update_reply.add_to_buffers(UpdateCharacter);
+		update_reply.add_to_buffers((item.second)->get_username());
+		update_reply.add_to_buffers((item.second)->get_posx());
+		update_reply.add_to_buffers((item.second)->get_posy());
+		update_reply.add_to_buffers((item.second)->get_posz());
+		update_reply.add_to_buffers((item.second)->get_dirx());
+		update_reply.add_to_buffers((item.second)->get_dirz());
+		update_reply.add_to_buffers((item.second)->get_crouch());
+		update_reply.add_to_buffers((item.second)->get_jump());
+		update_reply.add_to_buffers((item.second)->get_attack());
+		update_reply.add_to_buffers((item.second)->get_grab());
+		update_reply.add_to_buffers((item.second)->get_item());
+		update_reply.add_to_buffers((item.second)->get_drop());
+		update_reply.add_to_buffers((item.second)->get_roll());
+		update_reply.add_to_buffers((item.second)->get_jumpoffwall());
+		update_reply.add_to_buffers((item.second)->get_activeblock());
+		update_reply.add_to_buffers((item.second)->get_blood_damage());
+		update_reply.add_to_buffers((item.second)->get_blood_health());
+		update_reply.add_to_buffers((item.second)->get_block_health());
+		update_reply.add_to_buffers((item.second)->get_temp_health());
+		update_reply.add_to_buffers((item.second)->get_permanent_health());
+		update_reply.add_to_buffers((item.second)->get_knocked_out());
+		update_reply.add_to_buffers((item.second)->get_lives());
+		update_reply.add_to_buffers((item.second)->get_blood_amount());
+		update_reply.add_to_buffers((item.second)->get_recovery_time());
+		update_reply.add_to_buffers((item.second)->get_roll_recovery_time());
+		update_reply.add_to_buffers((item.second)->get_remove_blood());
+		update_reply.add_to_buffers((item.second)->get_blood_delay());
+		update_reply.add_to_buffers((item.second)->get_cut_throat());
+		update_reply.add_to_buffers((item.second)->get_state());
 
-		update_tree.put("content.username" , (item.second)->get_username());
-		update_tree.put("content.posx" , to_string((item.second)->get_posx()));
-		update_tree.put("content.posy" , to_string((item.second)->get_posy()));
-		update_tree.put("content.posz" , to_string((item.second)->get_posz()));
-		update_tree.put("content.dirx" , to_string((item.second)->get_dirx()));
-		update_tree.put("content.dirz" , to_string((item.second)->get_dirz()));
-		update_tree.put("content.crouch" , to_string((item.second)->get_crouch()));
-		update_tree.put("content.jump" , to_string((item.second)->get_jump()));
-		update_tree.put("content.attack" , to_string((item.second)->get_attack()));
-		update_tree.put("content.grab" , to_string((item.second)->get_grab()));
-		update_tree.put("content.item" , to_string((item.second)->get_item()));
-		update_tree.put("content.drop" , to_string((item.second)->get_drop()));
-		update_tree.put("content.roll" , to_string((item.second)->get_roll()));
-		update_tree.put("content.offwall" , to_string((item.second)->get_jumpoffwall()));
-		update_tree.put("content.activeblock" , to_string((item.second)->get_activeblock()));
-		update_tree.put("content.blood_damage" , to_string((item.second)->get_blood_damage()));
-		update_tree.put("content.blood_health" , to_string((item.second)->get_blood_health()));
-		update_tree.put("content.block_health" , to_string((item.second)->get_block_health()));
-		update_tree.put("content.temp_health" , to_string((item.second)->get_temp_health()));
-		update_tree.put("content.permanent_health" , to_string((item.second)->get_permanent_health()));
-		update_tree.put("content.knocked_out" , to_string((item.second)->get_knocked_out()));
-		update_tree.put("content.lives" , to_string((item.second)->get_lives()));
-		update_tree.put("content.blood_amount" , to_string((item.second)->get_blood_amount()));
-		update_tree.put("content.recovery_time" , to_string((item.second)->get_recovery_time()));
-		update_tree.put("content.roll_recovery_time" , to_string((item.second)->get_roll_recovery_time()));
-		update_tree.put("content.remove_blood" , to_string((item.second)->get_remove_blood()));
-		update_tree.put("content.blood_delay" , to_string((item.second)->get_blood_delay()));
-		update_tree.put("content.cut_throat" , to_string((item.second)->get_cut_throat()));
-		update_tree.put("content.state" , to_string((item.second)->get_state()));
-
-		update_reply.json = true;
-		update_reply.content= jsonToString(update_tree);
 		rep.push(update_reply);
 	}
 }
@@ -621,6 +605,7 @@ void request_handler::handle_request(const request& req, stack<reply>& rep, clie
 		case UpdateGame :
 		{
 			cout << "Received UpdateGame message" << endl;
+			HandleUpdate(rep, this_client);
 			break;
 		}
 		case UpdateSelf :
