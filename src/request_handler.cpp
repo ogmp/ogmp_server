@@ -216,11 +216,11 @@ bool request_handler::handle_command(string_map& input, stack <reply>& rep) {
 	return false;
 }
 
-void request_handler::AddErrorMessage(stack<reply>& rep, string message){
+void request_handler::AddErrorMessage(vector<reply>& rep, string message){
 	reply new_reply;
 	new_reply.add_to_buffers(Error);
 	new_reply.add_to_buffers(message);
-	rep.push(new_reply);
+	rep.push_back(new_reply);
 }
 
 string request_handler::GetString(){
@@ -256,7 +256,18 @@ int request_handler::GetInt(){
 	return value;
 }
 
-void request_handler::HandleSignOn(stack<reply>& rep, client& this_client){
+void request_handler::HandleSignOn(vector<reply>& rep, client_ptr& this_client){
+	// 
+	// this_client = 
+	// client_ptr new_player(new client());
+	// this_client = new client();
+	// this_client = std::shared_ptr<client>(new client());
+	// client new_client = new client();
+	client new_client;
+	// client_ptr new_player(new client());
+	this_client = boost::make_shared<client>(new_client);
+	// this_client = boost::make_shared<client>(new client());
+	// this_client = std::make_shared<int>(53);
 	reply new_reply;
 
 	string username = GetString();
@@ -291,18 +302,18 @@ void request_handler::HandleSignOn(stack<reply>& rep, client& this_client){
 		}
 	}
 	
-	this_client.set_level(levelname);
-	this_client.set_username(username);
-	this_client.set_team(username);
+	this_client->set_level(levelname);
+	this_client->set_username(username);
+	this_client->set_team(username);
 	
-	this_client.set_posx(posx);
-	this_client.set_posy(posy);
-	this_client.set_posz(posz);
+	this_client->set_posx(posx);
+	this_client->set_posy(posy);
+	this_client->set_posz(posz);
 	
 	// Set default teleport to the spawn position.
-	this_client.set_saved_posx(posx);
-	this_client.set_saved_posy(posy);
-	this_client.set_saved_posz(posz);
+	this_client->set_saved_posx(posx);
+	this_client->set_saved_posy(posy);
+	this_client->set_saved_posz(posz);
 	
 	if(character == "Guard") {
 		character_dir = "guard";
@@ -363,44 +374,43 @@ void request_handler::HandleSignOn(stack<reply>& rep, client& this_client){
 	}else if(character == "Wolf") {
 		character_dir = "wolf";
 	}
-	this_client.set_character(character_dir);
+	this_client->set_character(character_dir);
+	//When the signon is successful 
+	this_client->set_signed_on(true);
 	
-	client_ptr client_pointer = boost::make_shared<client>(this_client);
+	cout << "Signed on " << this_client->get_signed_on() << endl;
 	
 	// Add the client to the client list.
-	client_manager_.add_client(client_pointer);
+	client_manager_.add_client(this_client);
 	
 	new_reply.add_to_buffers(SignOn);
 	new_reply.add_to_buffers(config_->get_update_refresh_rate());
-	new_reply.add_to_buffers(this_client.get_username());
+	new_reply.add_to_buffers(this_client->get_username());
 	new_reply.add_to_buffers(config_->get_welcome_message());
-	new_reply.add_to_buffers(this_client.get_team());
-	new_reply.add_to_buffers(this_client.get_character());
+	new_reply.add_to_buffers(this_client->get_team());
+	new_reply.add_to_buffers(this_client->get_character());
+	new_reply.content = "SignOn";
 	
-	
-	//When the signon is successful 
-	this_client.set_signed_on(true);
-	rep.push(new_reply);
-	
+	rep.push_back(new_reply);
 	
 	// Now add join commands for all other clients in the same group.
-	client_map other_clients = client_manager_.get_clients(client_pointer);
+	client_map other_clients = client_manager_.get_clients(this_client);
 	
 	cout << "The client manager has " << other_clients.size() << " clients" << endl;
 	
 	for(auto& item: other_clients) {
 		reply spawn_character_reply;
-		
+		spawn_character_reply.content = "SpawnCharacter";
 		cout << "Adding SpawnCharacter command for all the character that are already on the server!" << endl;
 		
 		spawn_character_reply.add_to_buffers(SpawnCharacter);
-		spawn_character_reply.add_to_buffers(this_client.get_username());
-		spawn_character_reply.add_to_buffers(this_client.get_username());
-		spawn_character_reply.add_to_buffers(this_client.get_character());
-		spawn_character_reply.add_to_buffers(this_client.get_posx());
-		spawn_character_reply.add_to_buffers(this_client.get_posy());
-		spawn_character_reply.add_to_buffers(this_client.get_posz());
-		rep.push(spawn_character_reply);
+		spawn_character_reply.add_to_buffers((item.second)->get_username());
+		spawn_character_reply.add_to_buffers((item.second)->get_username());
+		spawn_character_reply.add_to_buffers((item.second)->get_character());
+		spawn_character_reply.add_to_buffers((item.second)->get_posx());
+		spawn_character_reply.add_to_buffers((item.second)->get_posy());
+		spawn_character_reply.add_to_buffers((item.second)->get_posz());
+		rep.push_back(spawn_character_reply);
 	}
 	
 	// Send message command to other players.
@@ -408,143 +418,144 @@ void request_handler::HandleSignOn(stack<reply>& rep, client& this_client){
 	
 	message_reply.add_to_buffers(Message);
 	message_reply.add_to_buffers("server");
-	message_reply.add_to_buffers(client_pointer->get_username() + " has entered the room.");
+	message_reply.add_to_buffers(this_client->get_username() + " has entered the room.");
 	message_reply.add_to_buffers(true);
-	client_manager_.add_to_inbox(message_reply, client_pointer);
+	message_reply.content = "Message";
+	client_manager_.add_to_inbox(message_reply, this_client);
 	
 	// Write the message to the logs.
-	log::print(client_pointer->get_username() + " has entered the room.");
+	log::print(this_client->get_username() + " has entered the room.");
 	
 	// Send join command to other players.
 	reply spawn_character_reply;
 	
 	spawn_character_reply.add_to_buffers(SpawnCharacter);
-	spawn_character_reply.add_to_buffers(this_client.get_username());
-	spawn_character_reply.add_to_buffers(this_client.get_team());
-	spawn_character_reply.add_to_buffers(this_client.get_character());
-	spawn_character_reply.add_to_buffers(this_client.get_posx());
-	spawn_character_reply.add_to_buffers(this_client.get_posy());
-	spawn_character_reply.add_to_buffers(this_client.get_posz());
+	spawn_character_reply.add_to_buffers(this_client->get_username());
+	spawn_character_reply.add_to_buffers(this_client->get_team());
+	spawn_character_reply.add_to_buffers(this_client->get_character());
+	spawn_character_reply.add_to_buffers(this_client->get_posx());
+	spawn_character_reply.add_to_buffers(this_client->get_posy());
+	spawn_character_reply.add_to_buffers(this_client->get_posz());
+	spawn_character_reply.content = "SpawnCharacter";
 
-	client_manager_.add_to_inbox(spawn_character_reply, client_pointer);
+	client_manager_.add_to_inbox(spawn_character_reply, this_client);
 }
 
-void request_handler::HandleUpdate(stack<reply>& rep, client& this_client){
+void request_handler::HandleUpdate(vector<reply>& rep, client_ptr& this_client){
 	// Update player states.
 
-	this_client.set_posx(GetFloat());
-	this_client.set_posy(GetFloat());
-	this_client.set_posz(GetFloat());
-	this_client.set_dirx(GetFloat());
-	this_client.set_dirz(GetFloat());
+	this_client->set_posx(GetFloat());
+	this_client->set_posy(GetFloat());
+	this_client->set_posz(GetFloat());
+	this_client->set_dirx(GetFloat());
+	this_client->set_dirz(GetFloat());
 
-	this_client.set_crouch(GetBool());
-	this_client.set_jump(GetBool());
-	this_client.set_attack(GetBool());
-	this_client.set_grab(GetBool());
-	this_client.set_item(GetBool());
-	this_client.set_drop(GetBool());
-	this_client.set_roll(GetBool());
-	this_client.set_jumpoffwall(GetBool());
-	this_client.set_activeblock(GetBool());
+	this_client->set_crouch(GetBool());
+	this_client->set_jump(GetBool());
+	this_client->set_attack(GetBool());
+	this_client->set_grab(GetBool());
+	this_client->set_item(GetBool());
+	this_client->set_drop(GetBool());
+	this_client->set_roll(GetBool());
+	this_client->set_jumpoffwall(GetBool());
+	this_client->set_activeblock(GetBool());
 	
-	if((this_client.get_time_of_death() < 1) || (difftime(time(0), this_client.get_time_of_death()) > 10)) {
+	if((this_client->get_time_of_death() < 1) || (difftime(time(0), this_client->get_time_of_death()) > 10)) {
 		// Do not allow this_clients to increase some parts of their health.
-		if(GetFloat() < this_client.get_blood_health()) {
-			this_client.set_blood_health(GetFloat());
+		if(GetFloat() < this_client->get_blood_health()) {
+			this_client->set_blood_health(GetFloat());
 		}
-		if(GetFloat() < this_client.get_permanent_health()) {
-			this_client.set_permanent_health(GetFloat());
+		if(GetFloat() < this_client->get_permanent_health()) {
+			this_client->set_permanent_health(GetFloat());
 		}
-		if(GetFloat() > this_client.get_knocked_out()) {
-			this_client.set_knocked_out(GetFloat());
+		if(GetFloat() > this_client->get_knocked_out()) {
+			this_client->set_knocked_out(GetFloat());
 		}
-		if(GetInt() < this_client.get_lives()) {
-			this_client.set_lives(GetInt());
+		if(GetInt() < this_client->get_lives()) {
+			this_client->set_lives(GetInt());
 		}
-		this_client.set_blood_damage(GetFloat());
-		this_client.set_block_health(GetFloat());
-		this_client.set_temp_health(GetFloat());
+		this_client->set_blood_damage(GetFloat());
+		this_client->set_block_health(GetFloat());
+		this_client->set_temp_health(GetFloat());
 	}
 
-	this_client.set_blood_delay(GetInt());
-	this_client.set_cut_throat(GetInt());
-	this_client.set_state(GetInt());
-
-	client_ptr client_pointer = boost::make_shared<client>(this_client);
+	this_client->set_blood_delay(GetInt());
+	this_client->set_cut_throat(GetInt());
+	this_client->set_state(GetInt());
 
 	// Add commands from queue if available.
-	while(this_client.get_number_of_inbox_messages() != 0) {
-		reply message = this_client.get_inbox_message();
-		rep.push(message);
+	cout << "Number of inbox messages " << this_client->get_number_of_inbox_messages() << endl;
+	while(this_client->get_number_of_inbox_messages() != 0) {
+		reply message = this_client->get_inbox_message();
+		rep.push_back(message);
 	}
 
 	// Check if the player died (we consider unconscious as dead for now).
-	if((this_client.get_permanent_health() <= 0.0f)
-	|| (this_client.get_blood_health() <= 0.0f)
-	|| (this_client.get_temp_health() <= 0.0f)
-	|| (this_client.get_knocked_out() == _dead)
-	|| (this_client.get_lives() < 0)) {
+	if((this_client->get_permanent_health() <= 0.0f)
+	|| (this_client->get_blood_health() <= 0.0f)
+	|| (this_client->get_temp_health() <= 0.0f)
+	|| (this_client->get_knocked_out() == _dead)
+	|| (this_client->get_lives() < 0)) {
 		// Only announce death once.
-		if(!this_client.get_death_changed()) {
-			this_client.set_death_changed(true);
-			this_client.set_time_of_death(time(0));
+		if(!this_client->get_death_changed()) {
+			this_client->set_death_changed(true);
+			this_client->set_time_of_death(time(0));
 
 			// Send message to all players in the group.
 			reply message_reply;
 			
 			message_reply.add_to_buffers(Message);
 			message_reply.add_to_buffers("server");
-			message_reply.add_to_buffers(client_pointer->get_username() + " has died.");
+			message_reply.add_to_buffers(this_client->get_username() + " has died.");
 			message_reply.add_to_buffers(true);
 
-			client_manager_.add_to_inbox(message_reply, client_pointer);
+			client_manager_.add_to_inbox(message_reply, this_client);
 
 			// Also send the message to player himself.
-			this_client.add_to_inbox(message_reply);
+			this_client->add_to_inbox(message_reply);
 		} else {
 			// Revive the player after some seconds (experimental).
-			if(difftime(time(0), this_client.get_time_of_death()) > 5) {
-				this_client.set_blood_health(1.0f);
-				this_client.set_permanent_health(1.0f);
-				this_client.set_blood_damage(0.0f);
-				this_client.set_block_health(1.0f);
-				this_client.set_temp_health(1.0f);
-				this_client.set_knocked_out(_awake);
-				this_client.set_lives(1);
-				this_client.set_blood_amount(10.0f);
-				this_client.set_recovery_time(0.0f);
-				this_client.set_roll_recovery_time(0.0f);
-				this_client.set_remove_blood(true);
-				this_client.set_cut_throat(false);
+			if(difftime(time(0), this_client->get_time_of_death()) > 5) {
+				this_client->set_blood_health(1.0f);
+				this_client->set_permanent_health(1.0f);
+				this_client->set_blood_damage(0.0f);
+				this_client->set_block_health(1.0f);
+				this_client->set_temp_health(1.0f);
+				this_client->set_knocked_out(_awake);
+				this_client->set_lives(1);
+				this_client->set_blood_amount(10.0f);
+				this_client->set_recovery_time(0.0f);
+				this_client->set_roll_recovery_time(0.0f);
+				this_client->set_remove_blood(true);
+				this_client->set_cut_throat(false);
 			}
 		}
 	} else {
-		this_client.set_death_changed(false);
-		this_client.set_remove_blood(false);
+		this_client->set_death_changed(false);
+		this_client->set_remove_blood(false);
 	}
 	
 	// Send health back to player.
 	reply updateself_reply;
 	
 	updateself_reply.add_to_buffers(UpdateSelf);
-	updateself_reply.add_to_buffers(this_client.get_blood_damage());
-	updateself_reply.add_to_buffers(this_client.get_blood_health());
-	updateself_reply.add_to_buffers(this_client.get_block_health());
-	updateself_reply.add_to_buffers(this_client.get_temp_health());
-	updateself_reply.add_to_buffers(this_client.get_permanent_health());
-	updateself_reply.add_to_buffers(this_client.get_lives());
-	updateself_reply.add_to_buffers(this_client.get_blood_amount());
-	updateself_reply.add_to_buffers(this_client.get_recovery_time());
-	updateself_reply.add_to_buffers(this_client.get_roll_recovery_time());
-	updateself_reply.add_to_buffers(this_client.get_remove_blood());
-	updateself_reply.add_to_buffers(this_client.get_cut_throat());
+	updateself_reply.add_to_buffers(this_client->get_blood_damage());
+	updateself_reply.add_to_buffers(this_client->get_blood_health());
+	updateself_reply.add_to_buffers(this_client->get_block_health());
+	updateself_reply.add_to_buffers(this_client->get_temp_health());
+	updateself_reply.add_to_buffers(this_client->get_permanent_health());
+	updateself_reply.add_to_buffers(this_client->get_lives());
+	updateself_reply.add_to_buffers(this_client->get_blood_amount());
+	updateself_reply.add_to_buffers(this_client->get_recovery_time());
+	updateself_reply.add_to_buffers(this_client->get_roll_recovery_time());
+	updateself_reply.add_to_buffers(this_client->get_remove_blood());
+	updateself_reply.add_to_buffers(this_client->get_cut_throat());
 
 	//TODO maybe just send this when needed.
-	//rep.push(updateself_reply);
+	//rep.push_back(updateself_reply);
 
 	// Get states of the other clients.
-	client_map other_clients = client_manager_.get_clients(client_pointer);
+	client_map other_clients = client_manager_.get_clients(this_client);
 
 	for(auto& item: other_clients) {
 		reply update_reply;
@@ -580,11 +591,11 @@ void request_handler::HandleUpdate(stack<reply>& rep, client& this_client){
 		update_reply.add_to_buffers((item.second)->get_cut_throat());
 		update_reply.add_to_buffers((item.second)->get_state());
 
-		rep.push(update_reply);
+		rep.push_back(update_reply);
 	}
 }
 
-void request_handler::handle_request(const request& req, stack<reply>& rep, client& this_client, char* data_, std::size_t bytes_transferred) {
+void request_handler::handle_request(const request& req, vector<reply>& rep, client_ptr& this_client, char* data_, std::size_t bytes_transferred) {
 	cout << "Printing message: " << endl;
 	cout << req.content << endl;
 	
@@ -626,15 +637,8 @@ void request_handler::handle_request(const request& req, stack<reply>& rep, clie
 	return;
 }
 
-void request_handler::prepare_reply(stack<reply>& rep, string extension) {
-	reply& top_reply = rep.top();
-	top_reply.status= reply::ok;
-
-	top_reply.headers.resize(2);
-	top_reply.headers[0].name= "Content-Length";
-	top_reply.headers[0].value= to_string(top_reply.content.size());
-	top_reply.headers[1].name= "Content-Type";
-	top_reply.headers[1].value= mime_types::extension_to_type(extension);
+void request_handler::prepare_reply(vector<reply>& rep, string extension) {
+	
 }
 
 string request_handler::encode_output(string_map output) {

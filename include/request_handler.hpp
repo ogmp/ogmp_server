@@ -30,7 +30,7 @@ class request_handler {
 		explicit request_handler(config_ptr conf, const string& doc_root);
 
 		// Handle a request and produce a reply.
-		void handle_request(const request& req, stack <reply>& rep, client& this_client, char* data_, std::size_t bytes_transferred);
+		void handle_request(const request& req, vector <reply>& rep, client_ptr& this_client, char* data_, std::size_t bytes_transferred);
 
 		// Turns a string map into an encoded string.
 		string encode_output(string_map output);
@@ -70,10 +70,10 @@ class request_handler {
 		string create_new_uid(size_t length);
 		bool url_decode(const string& in, string& out);
 		bool handle_command(string_map& input, stack <reply>& rep);
-		void prepare_reply(stack <reply>& rep, string extension = "");
-		void HandleSignOn(stack<reply>& rep, client& this_client);
-		void HandleUpdate(stack<reply>& rep, client& this_client);
-		void AddErrorMessage(stack<reply>& rep, string message);
+		void prepare_reply(vector<reply>& rep, string extension = "");
+		void HandleSignOn(vector<reply>& rep, client_ptr& this_client);
+		void HandleUpdate(vector<reply>& rep, client_ptr& this_client);
+		void AddErrorMessage(vector<reply>& rep, string message);
 		string GetString();
 		float GetFloat();
 		bool GetBool();

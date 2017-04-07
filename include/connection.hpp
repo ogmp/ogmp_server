@@ -57,12 +57,12 @@ class connection : public std::enable_shared_from_this<connection> {
 		request request_;
 		
 		//There is one client per connection
-		client this_client_;
+		client_ptr this_client_;
 
 		/// The parser for the incoming request.
 		request_parser request_parser_;
 		
-		stack<reply> replies_;
+		vector<reply> replies_;
 };
 
 typedef std::shared_ptr<connection> connection_ptr;
