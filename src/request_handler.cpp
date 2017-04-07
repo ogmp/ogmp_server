@@ -417,10 +417,9 @@ void request_handler::HandleSignOn(vector<reply>& rep, client_ptr& this_client){
 	reply message_reply;
 	
 	message_reply.add_to_buffers(Message);
-	message_reply.add_to_buffers("server");
+	message_reply.add_to_buffers((string)"server");
 	message_reply.add_to_buffers(this_client->get_username() + " has entered the room.");
 	message_reply.add_to_buffers(true);
-	message_reply.content = "Message";
 	client_manager_.add_to_inbox(message_reply, this_client);
 	
 	// Write the message to the logs.
@@ -502,17 +501,17 @@ void request_handler::HandleUpdate(vector<reply>& rep, client_ptr& this_client){
 			this_client->set_time_of_death(time(0));
 
 			// Send message to all players in the group.
-			reply message_reply;
+			reply died_message;
 			
-			message_reply.add_to_buffers(Message);
-			message_reply.add_to_buffers("server");
-			message_reply.add_to_buffers(this_client->get_username() + " has died.");
-			message_reply.add_to_buffers(true);
+			died_message.add_to_buffers(Message);
+			died_message.add_to_buffers((string)"server");
+			died_message.add_to_buffers(this_client->get_username() + " has died.");
+			died_message.add_to_buffers(true);
 
-			client_manager_.add_to_inbox(message_reply, this_client);
+			client_manager_.add_to_inbox(died_message, this_client);
 
 			// Also send the message to player himself.
-			this_client->add_to_inbox(message_reply);
+			this_client->add_to_inbox(died_message);
 		} else {
 			// Revive the player after some seconds (experimental).
 			if(difftime(time(0), this_client->get_time_of_death()) > 5) {
@@ -596,9 +595,7 @@ void request_handler::HandleUpdate(vector<reply>& rep, client_ptr& this_client){
 }
 
 void request_handler::handle_request(const request& req, vector<reply>& rep, client_ptr& this_client, char* data_, std::size_t bytes_transferred) {
-	cout << "Printing message: " << endl;
-	cout << req.content << endl;
-	
+
 	for(uint i = 0; i < bytes_transferred; i++){
 		cout << (int)data[i] << " ";
 	}

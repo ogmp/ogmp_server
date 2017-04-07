@@ -113,7 +113,7 @@ void reply::add_to_buffers(float content){
 }
 
 void reply::add_to_buffers(std::string content){
-	// std::cout << "Trying to add a string to the buffer " << content << std::endl;
+	std::cout << "Trying to add a string to the buffer " << content << std::endl;
 	const char* byte_array = content.c_str();
 	//The size of the string is send first.
 	buffer.push_back(strlen(byte_array));
