@@ -53,6 +53,7 @@ struct reply {
 	void add_to_buffers(bool content);
 	void add_to_buffers(int content);
 	void floatToByteArray(float f);
+	void add_size_byte();
 	/// Get a stock reply.
 	static reply stock_reply(status_type status);
 };

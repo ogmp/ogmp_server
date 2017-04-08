@@ -243,7 +243,7 @@ float request_handler::GetFloat(){
 
 bool request_handler::GetBool(){
 	bool value = false;
-	if(data[data_index] == 0){
+	if(data[data_index] == 1){
 		value = true;
 	}
 	data_index++;

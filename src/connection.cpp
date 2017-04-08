@@ -55,6 +55,7 @@ void connection::do_write() {
 		return;
 	}
 	reply& current_reply = replies_.front();
+	current_reply.add_size_byte();
 	cout << "Sending message type " << (int)current_reply.buffer.at(0) << endl;
 	boost::asio::async_write(socket_, current_reply.to_buffers(),
 	[this, self, current_reply](boost::system::error_code ec, std::size_t) {
@@ -73,8 +74,11 @@ void connection::do_write() {
 		if (!ec) {
 			cout << "No errors occured" << endl;
 		}
+		replies_.erase (replies_.begin());
+		if(replies_.size() > 0){
+				do_write();
+		}
 	});
-	replies_.erase (replies_.begin());
 }
 
 // void connection::do_write() {
