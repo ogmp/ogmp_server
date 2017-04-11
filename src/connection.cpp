@@ -43,6 +43,7 @@ void connection::do_read() {
 				}
 			} else if(ec != boost::asio::error::operation_aborted) {
 					cout << "connection closed" << endl;
+					request_handler_.client_disconnected(this_client_);
 					connection_manager_.stop(shared_from_this());
 			}
 
@@ -69,10 +70,8 @@ void connection::do_write() {
 		}
 		if (ec == boost::asio::error::operation_aborted) {
 			cout << "connection closed" << endl;
+			request_handler_.client_disconnected(this_client_);
 			connection_manager_.stop(shared_from_this());
-		}
-		if (!ec) {
-			cout << "No errors occured" << endl;
 		}
 		replies_.erase (replies_.begin());
 		if(replies_.size() > 0){

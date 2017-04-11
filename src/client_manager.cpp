@@ -54,6 +54,19 @@ void client_manager::add_to_inbox(reply& command, client_ptr initiator) {
 	}
 }
 
+void client_manager::remove_client(client_ptr initiator) {
+	boost::unique_lock<boost::mutex> scoped_lock(clients_mutex_);
+
+	for(auto& item: clients_) {
+		if(initiator) {
+			if(item.second == initiator) {
+				clients_.erase(item.first);
+				continue;
+			}
+		}
+	}
+}
+
 
 client_ptr client_manager::get_client(string uid) {
 	boost::unique_lock<boost::mutex> scoped_lock(clients_mutex_);

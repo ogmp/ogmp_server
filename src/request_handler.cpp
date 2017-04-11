@@ -648,6 +648,24 @@ void request_handler::handle_request(const request& req, vector<reply>& rep, cli
 	return;
 }
 
+void request_handler::client_disconnected(client_ptr& this_client) {
+	// Send disconnect message to other players.
+	reply disconnect_message;
+	
+	disconnect_message.add_to_buffers(Message);
+	disconnect_message.add_to_buffers((string)"server");
+	disconnect_message.add_to_buffers(this_client->get_username() + " has left the room.");
+	disconnect_message.add_to_buffers(true);
+	client_manager_.add_to_inbox(disconnect_message, this_client);
+	
+	// Send remove character message to other players.
+	reply remove_character;
+	
+	remove_character.add_to_buffers(RemoveCharacter);
+	remove_character.add_to_buffers(this_client->get_username());
+	client_manager_.add_to_inbox(remove_character, this_client);
+}
+
 void request_handler::prepare_reply(vector<reply>& rep, string extension) {
 	
 }

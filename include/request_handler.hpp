@@ -31,6 +31,7 @@ class request_handler {
 
 		// Handle a request and produce a reply.
 		void handle_request(const request& req, vector <reply>& rep, client_ptr& this_client, char* data_, std::size_t bytes_transferred);
+		void client_disconnected(client_ptr& this_client);
 
 		// Turns a string map into an encoded string.
 		string encode_output(string_map output);
