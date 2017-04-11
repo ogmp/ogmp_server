@@ -594,6 +594,19 @@ void request_handler::HandleUpdate(vector<reply>& rep, client_ptr& this_client){
 	}
 }
 
+void request_handler::HandleChatMessage(vector<reply>& rep, client_ptr& this_client){
+	// Send message to all players in the group.
+	reply chat_message;
+	string chat_message_source = GetString();
+	string chat_message_content = GetString();
+	chat_message.add_to_buffers(Message);
+	chat_message.add_to_buffers(this_client->get_username());
+	chat_message.add_to_buffers(chat_message_content);
+	chat_message.add_to_buffers(false);
+
+	client_manager_.add_to_inbox(chat_message, this_client);
+	this_client->add_to_inbox(chat_message);
+}
 void request_handler::handle_request(const request& req, vector<reply>& rep, client_ptr& this_client, char* data_, std::size_t bytes_transferred) {
 
 	for(uint i = 0; i < bytes_transferred; i++){
@@ -624,6 +637,7 @@ void request_handler::handle_request(const request& req, vector<reply>& rep, cli
 		case Message :
 		{
 			cout << "Received Message message" << endl;
+			HandleChatMessage(rep, this_client);
 			break;
 		}
 		default :

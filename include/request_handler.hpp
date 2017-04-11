@@ -73,6 +73,7 @@ class request_handler {
 		void prepare_reply(vector<reply>& rep, string extension = "");
 		void HandleSignOn(vector<reply>& rep, client_ptr& this_client);
 		void HandleUpdate(vector<reply>& rep, client_ptr& this_client);
+		void HandleChatMessage(vector<reply>& rep, client_ptr& this_client);
 		void AddErrorMessage(vector<reply>& rep, string message);
 		string GetString();
 		float GetFloat();
