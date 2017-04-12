@@ -75,6 +75,8 @@ class request_handler {
 		void HandleSignOn(vector<reply>& rep, client_ptr& this_client);
 		void HandleUpdate(vector<reply>& rep, client_ptr& this_client);
 		void HandleChatMessage(vector<reply>& rep, client_ptr& this_client);
+		void HandleSavePositionMessage(client_ptr& this_client);
+		void HandleLoadPositionMessage(vector<reply>& rep, client_ptr& this_client);
 		void AddErrorMessage(vector<reply>& rep, string message);
 		string GetString();
 		float GetFloat();

@@ -607,6 +607,35 @@ void request_handler::HandleChatMessage(vector<reply>& rep, client_ptr& this_cli
 	client_manager_.add_to_inbox(chat_message, this_client);
 	this_client->add_to_inbox(chat_message);
 }
+
+void request_handler::HandleSavePositionMessage(client_ptr& this_client){
+	// Don't continue if disabled.
+	if(!config_->get_allow_teleport()) {
+		return;
+	}
+
+	// Create copies of the client coordinates.
+	this_client->set_saved_posx(this_client->get_posx());
+	this_client->set_saved_posy(this_client->get_posy());
+	this_client->set_saved_posz(this_client->get_posz());
+	
+}
+
+void request_handler::HandleLoadPositionMessage(vector<reply>& rep, client_ptr& this_client){
+	// Don't continue if disabled.
+	if(!config_->get_allow_teleport()) {
+		return;
+	}
+
+	reply load_position_message;
+	load_position_message.add_to_buffers(LoadPosition);
+	load_position_message.add_to_buffers(this_client->get_saved_posx());
+	load_position_message.add_to_buffers(this_client->get_saved_posy());
+	load_position_message.add_to_buffers(this_client->get_saved_posz());
+	this_client->add_to_inbox(load_position_message);
+
+}
+
 void request_handler::handle_request(const request& req, vector<reply>& rep, client_ptr& this_client, char* data_, std::size_t bytes_transferred) {
 
 	for(uint i = 0; i < bytes_transferred; i++){
@@ -640,6 +669,18 @@ void request_handler::handle_request(const request& req, vector<reply>& rep, cli
 			HandleChatMessage(rep, this_client);
 			break;
 		}
+		case SavePosition :
+		{
+			cout << "Received SavePosition message" << endl;
+			HandleSavePositionMessage(this_client);
+			break;
+		}
+		case LoadPosition :
+		{
+			cout << "Received LoadPosition message" << endl;
+			HandleLoadPositionMessage(rep, this_client);
+			break;
+		}
 		default :
 		{
 			cout << "Received Unknown message" << endl;
@@ -649,6 +690,9 @@ void request_handler::handle_request(const request& req, vector<reply>& rep, cli
 }
 
 void request_handler::client_disconnected(client_ptr& this_client) {
+	if(this_client == NULL){
+		return;
+	}
 	// Send disconnect message to other players.
 	reply disconnect_message;
 	
@@ -664,6 +708,7 @@ void request_handler::client_disconnected(client_ptr& this_client) {
 	remove_character.add_to_buffers(RemoveCharacter);
 	remove_character.add_to_buffers(this_client->get_username());
 	client_manager_.add_to_inbox(remove_character, this_client);
+	client_manager_.remove_client(this_client);
 }
 
 void request_handler::prepare_reply(vector<reply>& rep, string extension) {

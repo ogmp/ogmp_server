@@ -125,7 +125,7 @@ void reply::add_to_buffers(std::string content){
 }
 
 void reply::add_to_buffers(bool content){
-	std::cout << "Trying to add a boolean to the buffer " << content << std::endl;
+	// std::cout << "Trying to add a boolean to the buffer " << content << std::endl;
 	if(content){
 		buffer.push_back(1);
 	}else{

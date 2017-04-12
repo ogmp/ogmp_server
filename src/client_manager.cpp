@@ -55,6 +55,7 @@ void client_manager::add_to_inbox(reply& command, client_ptr initiator) {
 }
 
 void client_manager::remove_client(client_ptr initiator) {
+	std::cout << "Removing client!" << std::endl;
 	boost::unique_lock<boost::mutex> scoped_lock(clients_mutex_);
 
 	for(auto& item: clients_) {
