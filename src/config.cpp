@@ -13,6 +13,7 @@ config::config(string filename) {
 
 	update_refresh_rate_ = pt.get<float>("ServerSettings.update_refresh_rate");
 	welcome_message_ = pt.get<string>("ServerSettings.welcome_message");
+	server_name_ = pt.get<string>("ServerSettings.server_name");
 	remove_delay_ = pt.get<double>("ServerSettings.remove_delay");
 	allow_teleport_ = pt.get<bool>("ServerSettings.allow_teleport");
 	debug_ = pt.get<bool>("ServerSettings.debug");
@@ -25,6 +26,10 @@ float config::get_update_refresh_rate() {
 
 string config::get_welcome_message() {
 	return welcome_message_;
+}
+
+string config::get_server_name() {
+	return server_name_;
 }
 
 double config::get_remove_delay() {

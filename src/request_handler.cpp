@@ -632,8 +632,7 @@ void request_handler::HandleLoadPositionMessage(vector<reply>& rep, client_ptr& 
 	load_position_message.add_to_buffers(this_client->get_saved_posx());
 	load_position_message.add_to_buffers(this_client->get_saved_posy());
 	load_position_message.add_to_buffers(this_client->get_saved_posz());
-	this_client->add_to_inbox(load_position_message);
-
+	rep.push_back(load_position_message);
 }
 
 void request_handler::handle_request(const request& req, vector<reply>& rep, client_ptr& this_client, char* data_, std::size_t bytes_transferred) {
@@ -681,12 +680,25 @@ void request_handler::handle_request(const request& req, vector<reply>& rep, cli
 			HandleLoadPositionMessage(rep, this_client);
 			break;
 		}
+		case ServerInfo :
+		{
+			HandleServerInfo(rep, this_client);
+			break;
+		}
 		default :
 		{
 			cout << "Received Unknown message" << endl;
 		}
 	}
 	return;
+}
+
+void request_handler::HandleServerInfo(vector<reply>& rep, client_ptr& this_client){
+	reply serverinfo_message;
+	serverinfo_message.add_to_buffers(ServerInfo);
+	serverinfo_message.add_to_buffers(config_->get_server_name());
+	serverinfo_message.add_to_buffers(client_manager_.get_nr_players());
+	rep.push_back(serverinfo_message);
 }
 
 void request_handler::client_disconnected(client_ptr& this_client) {

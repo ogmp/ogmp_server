@@ -34,6 +34,10 @@ void client_manager::add_command(string_map command, client_ptr initiator) {
 	}
 }
 
+int client_manager::get_nr_players(){
+	return clients_.size();
+}
+
 void client_manager::add_to_inbox(reply& command, client_ptr initiator) {
 	boost::unique_lock<boost::mutex> scoped_lock(clients_mutex_);
 

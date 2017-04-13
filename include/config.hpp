@@ -14,6 +14,7 @@ class config {
 		config(string filename);
 		float get_update_refresh_rate(); 
 		string get_welcome_message();
+		string get_server_name();
 		double get_remove_delay();
 		bool get_allow_teleport();
 		bool get_debug();
@@ -21,7 +22,7 @@ class config {
 
 	private:
 		float update_refresh_rate_;
-		string welcome_message_, log_file_;
+		string welcome_message_, log_file_, server_name_;
 		double remove_delay_;
 		bool allow_teleport_, debug_;
 };

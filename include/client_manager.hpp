@@ -24,6 +24,7 @@ class client_manager {
 		void add_command(string_map command, client_ptr initiator = NULL);
 		void add_to_inbox(reply& command, client_ptr initiator = NULL);
 		void remove_client(client_ptr initiator);
+		int get_nr_players();
 		client_ptr get_client(string uid);
 		client_map get_clients(client_ptr initiator = NULL);
 		client_map pop_inactive_clients(time_t start, client_ptr initiator = NULL);
