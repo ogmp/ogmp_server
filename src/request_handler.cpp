@@ -287,6 +287,21 @@ void request_handler::HandleSignOn(vector<reply>& rep, client_ptr& this_client){
 	cout << " posy " << posy;
 	cout << " posz " << posz;
 	cout << endl;
+	
+	if(!config_->get_allow_other_maps()){
+		vector<pair<string, string>> allowed_maps = config_->get_map_list();
+		bool allowed = false;
+		for(auto& item: allowed_maps) {
+			if(levelname == item.second){
+				allowed = true;
+				break;
+			}
+		}
+		if(!allowed){
+			AddErrorMessage(rep, "This level is not allowed on this server!");
+			return;
+		}
+	}
 
 	string character_dir = "turner";
 	double signon_time= difftime(time(0), start_);
@@ -694,6 +709,8 @@ void request_handler::handle_request(const request& req, vector<reply>& rep, cli
 }
 
 void request_handler::HandleServerInfo(vector<reply>& rep, client_ptr& this_client){
+	client new_client;
+	this_client = boost::make_shared<client>(new_client);
 	reply serverinfo_message;
 	serverinfo_message.add_to_buffers(ServerInfo);
 	serverinfo_message.add_to_buffers(config_->get_server_name());
