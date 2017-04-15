@@ -700,6 +700,12 @@ void request_handler::handle_request(const request& req, vector<reply>& rep, cli
 			HandleServerInfo(rep, this_client);
 			break;
 		}
+		case LevelList :
+		{
+			cout << "Received LevelList message" << endl;
+			HandleLevelList(rep, this_client);
+			break;
+		}
 		default :
 		{
 			cout << "Received Unknown message" << endl;
@@ -715,6 +721,16 @@ void request_handler::HandleServerInfo(vector<reply>& rep, client_ptr& this_clie
 	serverinfo_message.add_to_buffers(ServerInfo);
 	serverinfo_message.add_to_buffers(config_->get_server_name());
 	serverinfo_message.add_to_buffers(client_manager_.get_nr_players());
+	rep.push_back(serverinfo_message);
+}
+
+void request_handler::HandleLevelList(vector<reply>& rep, client_ptr& this_client){
+	client new_client;
+	this_client = boost::make_shared<client>(new_client);
+	
+	reply serverinfo_message;
+	serverinfo_message.add_to_buffers(LevelList);
+	client_manager_.get_level_list(serverinfo_message);
 	rep.push_back(serverinfo_message);
 }
 
