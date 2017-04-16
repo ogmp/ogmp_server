@@ -19,7 +19,8 @@ class client {
 		client();
 
 		void set_uid(string uid);
-		void set_level(string level);
+		void set_level_name(string level);
+		void set_level_path(string level);
 		void set_username(string username);
 		void set_team(string team);
 		void add_command(string_map command);
@@ -66,7 +67,8 @@ class client {
 		void set_state(int state);
 
 		string get_uid();
-		string get_level();
+		string get_level_name();
+		string get_level_path();
 		string get_username();
 		string get_team();
 		string_map get_command();
@@ -118,7 +120,7 @@ class client {
 		vector <string_map> get_signon_commands();
 
 	private:
-		string uid_, level_, username_, team_, character_;
+		string uid_, level_path_, level_name_, username_, team_, character_;
 		float posx_, posy_, posz_, saved_posx_, saved_posy_, saved_posz_, dirx_, dirz_, blood_damage_, blood_health_, block_health_, temp_health_, permanent_health_, blood_amount_, recovery_time_, roll_recovery_time_;
 		bool iscrouching_, isjumping_, isattacking_, isgrabbing_, isusingitem_, isdropping_, isrolling_, isjumpingoffwall_, isactiveblocking_, death_changed_, remove_blood_, cut_throat_, has_signed_on_;
 		double last_updated_, time_of_death_;

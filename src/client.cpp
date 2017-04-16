@@ -6,7 +6,7 @@ namespace server {
 
 using namespace std;
 
-client::client() : uid_(""), username_(""), team_(""), character_(""), level_(""),
+client::client() : uid_(""), username_(""), team_(""), character_(""), level_path_(""), level_name_(""),
 posx_(0.0f), posy_(0.0f), posz_(0.0f), dirx_(0.0f), dirz_(0.0f), saved_posx_(0.0f),
 saved_posy_(0.0f), saved_posz_(0.0f), iscrouching_(false), isjumping_(false),
 isattacking_(false), isgrabbing_(false), isusingitem_(false), isdropping_(false),
@@ -21,8 +21,12 @@ void client::set_uid(string uid) {
 	uid_ = uid;
 }
 
-void client::set_level(string level) {
-	level_ = level;
+void client::set_level_path(string level_path) {
+	level_path_ = level_path;
+}
+
+void client::set_level_name(string level_name) {
+	level_name_ = level_name;
 }
 
 void client::set_username(string username) {
@@ -193,8 +197,12 @@ string client::get_uid() {
 	return uid_;
 }
 
-string client::get_level() {
-	return level_;
+string client::get_level_name() {
+	return level_name_;
+}
+
+string client::get_level_path() {
+	return level_path_;
 }
 
 string client::get_username() {

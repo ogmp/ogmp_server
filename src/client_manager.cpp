@@ -26,7 +26,7 @@ void client_manager::add_command(string_map command, client_ptr initiator) {
 			}
 
 			// Skip clients that are not on the same level as initiator.
-			if((item.second)->get_level() != initiator->get_level()) {
+			if((item.second)->get_level_path() != initiator->get_level_path()) {
 				continue;
 			}
 		}
@@ -50,7 +50,7 @@ void client_manager::add_to_inbox(reply& command, client_ptr initiator) {
 			}
 
 			// Skip clients that are not on the same level as initiator.
-			if((item.second)->get_level() != initiator->get_level()) {
+			if((item.second)->get_level_path() != initiator->get_level_path()) {
 				continue;
 			}
 		}
@@ -103,7 +103,7 @@ client_map client_manager::get_clients(client_ptr initiator) {
 		}
 
 		// Skip clients that are not on the same level as initiator.
-		if((item.second)->get_level() != initiator->get_level()) {
+		if((item.second)->get_level_path() != initiator->get_level_path()) {
 			continue;
 		}
 
@@ -163,7 +163,7 @@ void client_manager::get_level_list(reply& rep) {
 	for (const auto& map : config_->get_map_list()) {
 		int nr_players = 0;
 		for(auto& current_client: clients_) {
-			if( (current_client.second)->get_level() == map.second.data() ){
+			if( (current_client.second)->get_level_path() == map.second.data() ){
 				nr_players++;
 			}
 		}
@@ -173,7 +173,7 @@ void client_manager::get_level_list(reply& rep) {
 	for(auto& current_client: clients_) {
 		bool is_on_default = false;
 		for (const auto& map : config_->get_map_list()) {
-			if( (current_client.second)->get_level() == map.second.data() ){
+			if( (current_client.second)->get_level_path() == map.second.data() ){
 				is_on_default = true;
 				break;
 			}
@@ -182,7 +182,7 @@ void client_manager::get_level_list(reply& rep) {
 			//Check if non default map is already added
 			bool already_added = false;
 			for(auto& info : temp_levels){
-				if(info.get_level_path() == (current_client.second)->get_level()){
+				if(info.get_level_path() == (current_client.second)->get_level_path()){
 					already_added = true;
 					break;
 				}
@@ -190,11 +190,11 @@ void client_manager::get_level_list(reply& rep) {
 			if(!already_added){
 				int nr_players = 0;
 				for(auto& custom_map_current_client: clients_) {
-					if((current_client.second)->get_level() == (custom_map_current_client.second)->get_level()){
+					if((current_client.second)->get_level_path() == (custom_map_current_client.second)->get_level_path()){
 						nr_players++;
 					}
 				}
-				temp_levels.push_back(TempLevelInfo((current_client.second)->get_level(), (current_client.second)->get_level(), nr_players));
+				temp_levels.push_back(TempLevelInfo((current_client.second)->get_level_name(), (current_client.second)->get_level_path(), nr_players));
 			}
 		}
 	}

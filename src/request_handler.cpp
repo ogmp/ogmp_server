@@ -273,6 +273,7 @@ void request_handler::HandleSignOn(vector<reply>& rep, client_ptr& this_client){
 	string username = GetString();
 	string character = GetString();
 	string levelname = GetString();
+	string levelpath = GetString();
 	string version = GetString();
 	
 	float posx = GetFloat();
@@ -282,11 +283,20 @@ void request_handler::HandleSignOn(vector<reply>& rep, client_ptr& this_client){
 	cout << " Username " << username;
 	cout << " character " << character;
 	cout << " levelname " << levelname;
+	cout << " levelpath " << levelpath;
 	cout << " version " << version;
 	cout << " posx " << posx;
 	cout << " posy " << posy;
 	cout << " posz " << posz;
 	cout << endl;
+	
+	//Check if the level is a default level and set the name from there.
+	for (const auto& map : config_->get_map_list()) {
+		if( levelpath == map.second.data() ){
+			levelname = map.first.data();
+			break;
+		}
+	}
 	
 	if(!config_->get_allow_other_maps()){
 		vector<pair<string, string>> allowed_maps = config_->get_map_list();
@@ -317,7 +327,8 @@ void request_handler::HandleSignOn(vector<reply>& rep, client_ptr& this_client){
 		}
 	}
 	
-	this_client->set_level(levelname);
+	this_client->set_level_name(levelname);
+	this_client->set_level_path(levelpath);
 	this_client->set_username(username);
 	this_client->set_team(username);
 	
@@ -404,6 +415,7 @@ void request_handler::HandleSignOn(vector<reply>& rep, client_ptr& this_client){
 	new_reply.add_to_buffers(config_->get_welcome_message());
 	new_reply.add_to_buffers(this_client->get_team());
 	new_reply.add_to_buffers(this_client->get_character());
+	new_reply.add_to_buffers(this_client->get_level_name());
 	new_reply.content = "SignOn";
 	
 	rep.push_back(new_reply);
