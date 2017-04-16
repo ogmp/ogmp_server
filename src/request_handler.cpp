@@ -332,6 +332,9 @@ void request_handler::HandleSignOn(vector<reply>& rep, client_ptr& this_client){
 	this_client->set_username(username);
 	this_client->set_team(username);
 	
+	cout << this_client->get_level_name() << endl;
+	cout << this_client->get_level_path() << endl;
+	
 	this_client->set_posx(posx);
 	this_client->set_posy(posy);
 	this_client->set_posz(posz);
@@ -718,12 +721,25 @@ void request_handler::handle_request(const request& req, vector<reply>& rep, cli
 			HandleLevelList(rep, this_client);
 			break;
 		}
+		case PlayerList :
+		{
+			cout << "Received PlayerList message" << endl;
+			HandlePlayerList(rep, this_client);
+			break;
+		}
 		default :
 		{
 			cout << "Received Unknown message" << endl;
 		}
 	}
 	return;
+}
+
+void request_handler::HandlePlayerList(vector<reply>& rep, client_ptr& this_client){
+	reply playerlist_message;
+	playerlist_message.add_to_buffers(PlayerList);
+	client_manager_.get_player_list(playerlist_message, this_client);
+	rep.push_back(playerlist_message);
 }
 
 void request_handler::HandleServerInfo(vector<reply>& rep, client_ptr& this_client){

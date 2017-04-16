@@ -50,7 +50,8 @@ class request_handler {
 			UpdateCharacter = 9,
 			Error = 10,
 			ServerInfo = 11,
-			LevelList = 12
+			LevelList = 12,
+			PlayerList = 13
 		};
 		
 		//Specify how many bytes each variable takes up in the message
@@ -81,6 +82,7 @@ class request_handler {
 		void HandleLoadPositionMessage(vector<reply>& rep, client_ptr& this_client);
 		void HandleServerInfo(vector<reply>& rep, client_ptr& this_client);
 		void HandleLevelList(vector<reply>& rep, client_ptr& this_client);
+		void HandlePlayerList(vector<reply>& rep, client_ptr& this_client);
 		void AddErrorMessage(vector<reply>& rep, string message);
 		string GetString();
 		float GetFloat();
