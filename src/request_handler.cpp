@@ -302,7 +302,7 @@ void request_handler::HandleSignOn(vector<reply>& rep, client_ptr& this_client){
 		vector<pair<string, string>> allowed_maps = config_->get_map_list();
 		bool allowed = false;
 		for(auto& item: allowed_maps) {
-			if(levelname == item.second){
+			if(levelpath == item.second){
 				allowed = true;
 				break;
 			}
@@ -344,66 +344,66 @@ void request_handler::HandleSignOn(vector<reply>& rep, client_ptr& this_client){
 	this_client->set_saved_posy(posy);
 	this_client->set_saved_posz(posz);
 	
-	if(character == "Guard") {
-		character_dir = "guard";
-	}else if(character == "Raider+Rabbit") {
-		character_dir = "raider_rabbit";
-	}else if(character == "Pale+Turner") {
-		character_dir = "pale_turner";
-	}else if(character == "Guard+2") {
-		character_dir = "guard2";
-	}else if(character == "Base+Guard") {
-		character_dir = "base_guard";
-	}else if(character == "Cat") {
-		character_dir = "cat";
-	}else if(character == "Female+Rabbit+1") {
-		character_dir = "female_rabbit_1";
-	}else if(character == "Female+Rabbit+2") {
-		character_dir = "female_rabbit_2";
-	}else if(character == "Female+Rabbit+3") {
-		character_dir = "female_rabbit_3";
-	}else if(character == "Rat") {
-		character_dir = "rat";
-	}else if(character == "Female+Rat") {
-		character_dir = "female_rat";
-	}else if(character == "Hooded+Rat") {
-		character_dir = "hooded_rat";
-	}else if(character == "Light+Armored+Dog+Big") {
-		character_dir = "lt_dog_big";
-	}else if(character == "Light+Armored+Dog+Female") {
-		character_dir = "lt_dog_female";
-	}else if(character == "Light+Armored+Dog+Male+1") {
-		character_dir = "lt_dog_male_1";
-	}else if(character == "Light+Armored+Dog+Male+2") {
-		character_dir = "lt_dog_male_2";
-	}else if(character == "Male+Cat") {
-		character_dir = "male_cat";
-	}else if(character == "Female+Cat") {
-		character_dir = "female_cat";
-	}else if(character == "Striped+Cat") {
-		character_dir = "striped_cat";
-	}else if(character == "Fancy+Striped+Cat") {
-		character_dir = "fancy_striped_cat";
-	}else if(character == "Male+Rabbit+1") {
-		character_dir = "male_rabbit_1";
-	}else if(character == "Male+Rabbit+2") {
-		character_dir = "male_rabbit_2";
-	}else if(character == "Male+Rabbit+3") {
-		character_dir = "male_rabbit_3";
-	}else if(character == "Male+Wolf") {
-		character_dir = "male_wolf";
-	}else if(character == "Civilian") {
-		character_dir = "civ";
-	}else if(character == "Pale+Rabbit+Civilian") {
-		character_dir = "pale_rabbit_civ";
-	}else if(character == "Rabbot") {
-		character_dir = "rabbot";
-	}else if(character == "Turner") {
-		character_dir = "turner";
-	}else if(character == "Wolf") {
-		character_dir = "wolf";
-	}
-	this_client->set_character(character_dir);
+	// if(character == "Guard") {
+	// 	character_dir = "guard";
+	// }else if(character == "Raider Rabbit") {
+	// 	character_dir = "raider_rabbit";
+	// }else if(character == "Pale Turner") {
+	// 	character_dir = "pale_turner";
+	// }else if(character == "Guard 2") {
+	// 	character_dir = "guard2";
+	// }else if(character == "Base Guard") {
+	// 	character_dir = "base_guard";
+	// }else if(character == "Cat") {
+	// 	character_dir = "cat";
+	// }else if(character == "Female Rabbit 1") {
+	// 	character_dir = "female_rabbit_1";
+	// }else if(character == "Female Rabbit 2") {
+	// 	character_dir = "female_rabbit_2";
+	// }else if(character == "Female Rabbit 3") {
+	// 	character_dir = "female_rabbit_3";
+	// }else if(character == "Rat") {
+	// 	character_dir = "rat";
+	// }else if(character == "Female Rat") {
+	// 	character_dir = "female_rat";
+	// }else if(character == "Hooded Rat") {
+	// 	character_dir = "hooded_rat";
+	// }else if(character == "Light Armored Dog Big") {
+	// 	character_dir = "lt_dog_big";
+	// }else if(character == "Light Armored Dog Female") {
+	// 	character_dir = "lt_dog_female";
+	// }else if(character == "Light Armored Dog Male 1") {
+	// 	character_dir = "lt_dog_male_1";
+	// }else if(character == "Light Armored Dog Male 2") {
+	// 	character_dir = "lt_dog_male_2";
+	// }else if(character == "Male Cat") {
+	// 	character_dir = "male_cat";
+	// }else if(character == "Female Cat") {
+	// 	character_dir = "female_cat";
+	// }else if(character == "Striped Cat") {
+	// 	character_dir = "striped_cat";
+	// }else if(character == "Fancy Striped Cat") {
+	// 	character_dir = "fancy_striped_cat";
+	// }else if(character == "Male Rabbit 1") {
+	// 	character_dir = "male_rabbit_1";
+	// }else if(character == "Male Rabbit 2") {
+	// 	character_dir = "male_rabbit_2";
+	// }else if(character == "Male Rabbit 3") {
+	// 	character_dir = "male_rabbit_3";
+	// }else if(character == "Male Wolf") {
+	// 	character_dir = "male_wolf";
+	// }else if(character == "Civilian") {
+	// 	character_dir = "civ";
+	// }else if(character == "Pale Rabbit Civilian") {
+	// 	character_dir = "pale_rabbit_civ";
+	// }else if(character == "Rabbot") {
+	// 	character_dir = "rabbot";
+	// }else if(character == "Turner") {
+	// 	character_dir = "turner";
+	// }else if(character == "Wolf") {
+	// 	character_dir = "wolf";
+	// }
+	this_client->set_character(character);
 	//When the signon is successful 
 	this_client->set_signed_on(true);
 	
