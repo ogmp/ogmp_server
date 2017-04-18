@@ -489,28 +489,44 @@ void request_handler::HandleUpdate(vector<reply>& rep, client_ptr& this_client){
 	this_client->set_jumpoffwall(GetBool());
 	this_client->set_activeblock(GetBool());
 	
+	float blood_damage = GetFloat();
+	float blood_health = GetFloat();
+	float block_health = GetFloat();
+	float temp_health = GetFloat();
+	float permanent_health = GetFloat();
+	int knocked_out = GetInt();
+	int lives = GetInt();
+	float blood_amount = GetFloat();
+	
+	float recovery_time = GetFloat();
+	float roll_recovery_time = GetFloat();
+	int ragdoll_type = GetInt();
+	int blood_delay = GetInt();
+	bool cut_throat = GetBool();
+	int state = GetInt();
+	
 	if((this_client->get_time_of_death() < 1) || (difftime(time(0), this_client->get_time_of_death()) > 10)) {
 		// Do not allow this_clients to increase some parts of their health.
-		if(GetFloat() < this_client->get_blood_health()) {
-			this_client->set_blood_health(GetFloat());
+		if(blood_health < this_client->get_blood_health()) {
+			this_client->set_blood_health(blood_health);
 		}
-		if(GetFloat() < this_client->get_permanent_health()) {
-			this_client->set_permanent_health(GetFloat());
+		if(permanent_health < this_client->get_permanent_health()) {
+			this_client->set_permanent_health(permanent_health);
 		}
-		if(GetFloat() > this_client->get_knocked_out()) {
-			this_client->set_knocked_out(GetFloat());
+		if(knocked_out > this_client->get_knocked_out()) {
+			this_client->set_knocked_out(knocked_out);
 		}
-		if(GetInt() < this_client->get_lives()) {
-			this_client->set_lives(GetInt());
+		if(lives < this_client->get_lives()) {
+			this_client->set_lives(lives);
 		}
-		this_client->set_blood_damage(GetFloat());
-		this_client->set_block_health(GetFloat());
-		this_client->set_temp_health(GetFloat());
+		this_client->set_blood_damage(blood_damage);
+		this_client->set_block_health(block_health);
+		this_client->set_temp_health(temp_health);
 	}
 
-	this_client->set_blood_delay(GetInt());
-	this_client->set_cut_throat(GetInt());
-	this_client->set_state(GetInt());
+	this_client->set_blood_delay(blood_delay);
+	this_client->set_cut_throat(cut_throat);
+	this_client->set_state(state);
 
 	// Add commands from queue if available.
 	cout << "Number of inbox messages " << this_client->get_number_of_inbox_messages() << endl;
@@ -581,7 +597,7 @@ void request_handler::HandleUpdate(vector<reply>& rep, client_ptr& this_client){
 	updateself_reply.add_to_buffers(this_client->get_cut_throat());
 
 	//TODO maybe just send this when needed.
-	//rep.push_back(updateself_reply);
+	rep.push_back(updateself_reply);
 
 	// Get states of the other clients.
 	client_map other_clients = client_manager_.get_clients(this_client);
