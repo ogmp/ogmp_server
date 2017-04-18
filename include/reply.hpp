@@ -52,6 +52,7 @@ struct reply {
 	void add_to_buffers(std::string content);
 	void add_to_buffers(bool content);
 	void add_to_buffers(int content);
+	vector<unsigned char> intToByteArray(int value);
 	void floatToByteArray(float f);
 	void add_size_byte();
 	/// Get a stock reply.

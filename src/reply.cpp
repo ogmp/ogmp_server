@@ -145,9 +145,21 @@ void reply::floatToByteArray(float f) {
 }
 
 void reply::add_size_byte(){
-	int size = buffer.size();
-	// std::cout << "Buffer size " << size << std::endl;
-	buffer.insert(buffer.begin(), size);
+	vector<unsigned char> size = intToByteArray(buffer.size());
+	buffer.insert(buffer.begin(), size.begin(), size.end());
+}
+
+vector<unsigned char> reply::intToByteArray(int value){
+	vector<unsigned char> return_bytes(4);
+	for (int i = 0; i < 4; i++){
+		return_bytes[3 - i] = (value >> (i * 8));
+	}
+	std::cout << "Buffer size " << value << std::endl;
+	std::cout << "Buffer 0 " << int(return_bytes[0]) << std::endl;
+	std::cout << "Buffer 1 " << int(return_bytes[1]) << std::endl;
+	std::cout << "Buffer 2 " << int(return_bytes[2]) << std::endl;
+	std::cout << "Buffer 3 " << int(return_bytes[3]) << std::endl;
+	return return_bytes;
 }
 
 namespace stock_replies {

@@ -257,17 +257,8 @@ int request_handler::GetInt(){
 }
 
 void request_handler::HandleSignOn(vector<reply>& rep, client_ptr& this_client){
-	// 
-	// this_client = 
-	// client_ptr new_player(new client());
-	// this_client = new client();
-	// this_client = std::shared_ptr<client>(new client());
-	// client new_client = new client();
 	client new_client;
-	// client_ptr new_player(new client());
 	this_client = boost::make_shared<client>(new_client);
-	// this_client = boost::make_shared<client>(new client());
-	// this_client = std::make_shared<int>(53);
 	reply new_reply;
 
 	string username = GetString();
@@ -759,8 +750,6 @@ void request_handler::HandlePlayerList(vector<reply>& rep, client_ptr& this_clie
 }
 
 void request_handler::HandleServerInfo(vector<reply>& rep, client_ptr& this_client){
-	client new_client;
-	this_client = boost::make_shared<client>(new_client);
 	reply serverinfo_message;
 	serverinfo_message.add_to_buffers(ServerInfo);
 	serverinfo_message.add_to_buffers(config_->get_server_name());
@@ -769,9 +758,6 @@ void request_handler::HandleServerInfo(vector<reply>& rep, client_ptr& this_clie
 }
 
 void request_handler::HandleLevelList(vector<reply>& rep, client_ptr& this_client){
-	client new_client;
-	this_client = boost::make_shared<client>(new_client);
-	
 	reply serverinfo_message;
 	serverinfo_message.add_to_buffers(LevelList);
 	client_manager_.get_level_list(serverinfo_message);
