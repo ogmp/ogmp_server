@@ -12,7 +12,7 @@ saved_posy_(0.0f), saved_posz_(0.0f), iscrouching_(false), isjumping_(false),
 isattacking_(false), isgrabbing_(false), isusingitem_(false), isdropping_(false),
 isrolling_(false), isjumpingoffwall_(false), isactiveblocking_(false),
 blood_damage_(0.0f), blood_health_(1.0f), block_health_(1.0f), temp_health_(1.0f),
-permanent_health_(1.0f), knocked_out_(_awake), lives_(1), blood_amount_(10.0f),
+permanent_health_(1.0f), knocked_out_(_awake), blood_amount_(10.0f),
 recovery_time_(0.0f), roll_recovery_time_(0.0f), ragdoll_type_(0), time_of_death_(0),
 remove_blood_(false), blood_delay_(0), cut_throat_(false), state_(0), has_signed_on_(false) {
 }
@@ -147,10 +147,6 @@ void client::set_signed_on(bool signed_on){
 
 void client::set_time_of_death(double current_seconds) {
 	time_of_death_ = current_seconds;
-}
-
-void client::set_lives(int lives) {
-	lives_ = lives;
 }
 
 void client::set_blood_amount(float blood_amount) {
@@ -338,10 +334,6 @@ bool client::get_death_changed() {
 
 double client::get_time_of_death() {
 	return time_of_death_;
-}
-
-int client::get_lives() {
-	return lives_;
 }
 
 float client::get_blood_amount() {

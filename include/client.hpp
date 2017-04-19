@@ -56,7 +56,6 @@ class client {
 		void set_knocked_out(int knocked_out);
 		void set_death_changed(bool death_changed);
 		void set_time_of_death(double current_seconds);
-		void set_lives(int lives);
 		void set_blood_amount(float blood_amount);
 		void set_recovery_time(float recovery_time);
 		void set_roll_recovery_time(float roll_recovery_time);
@@ -105,7 +104,6 @@ class client {
 		int get_knocked_out();
 		bool get_death_changed();
 		double get_time_of_death();
-		int get_lives();
 		float get_blood_amount();
 		float get_recovery_time();
 		float get_roll_recovery_time();
@@ -124,7 +122,7 @@ class client {
 		float posx_, posy_, posz_, saved_posx_, saved_posy_, saved_posz_, dirx_, dirz_, blood_damage_, blood_health_, block_health_, temp_health_, permanent_health_, blood_amount_, recovery_time_, roll_recovery_time_;
 		bool iscrouching_, isjumping_, isattacking_, isgrabbing_, isusingitem_, isdropping_, isrolling_, isjumpingoffwall_, isactiveblocking_, death_changed_, remove_blood_, cut_throat_, has_signed_on_;
 		double last_updated_, time_of_death_;
-		int knocked_out_, lives_, ragdoll_type_, blood_delay_, state_;
+		int knocked_out_, ragdoll_type_, blood_delay_, state_;
 		string_map_vector commands_;
 		vector<reply> inbox_;
 };

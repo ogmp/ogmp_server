@@ -284,7 +284,6 @@ void request_handler::HandleUpdate(vector<reply>& rep, client_ptr& this_client){
 	float temp_health = GetFloat();
 	float permanent_health = GetFloat();
 	int knocked_out = GetInt();
-	int lives = GetInt();
 	float blood_amount = GetFloat();
 	
 	float recovery_time = GetFloat();
@@ -305,9 +304,6 @@ void request_handler::HandleUpdate(vector<reply>& rep, client_ptr& this_client){
 		if(knocked_out > this_client->get_knocked_out()) {
 			this_client->set_knocked_out(knocked_out);
 		}
-		if(lives < this_client->get_lives()) {
-			this_client->set_lives(lives);
-		}
 		this_client->set_blood_damage(blood_damage);
 		this_client->set_block_health(block_health);
 		this_client->set_temp_health(temp_health);
@@ -327,8 +323,7 @@ void request_handler::HandleUpdate(vector<reply>& rep, client_ptr& this_client){
 	if((this_client->get_permanent_health() <= 0.0f)
 	|| (this_client->get_blood_health() <= 0.0f)
 	|| (this_client->get_temp_health() <= 0.0f)
-	|| (this_client->get_knocked_out() == _dead)
-	|| (this_client->get_lives() < 0)) {
+	|| (this_client->get_knocked_out() != _awake)) {
 		// Only announce death once.
 		if(!this_client->get_death_changed()) {
 			this_client->set_death_changed(true);
@@ -355,7 +350,6 @@ void request_handler::HandleUpdate(vector<reply>& rep, client_ptr& this_client){
 				this_client->set_block_health(1.0f);
 				this_client->set_temp_health(1.0f);
 				this_client->set_knocked_out(_awake);
-				this_client->set_lives(1);
 				this_client->set_blood_amount(10.0f);
 				this_client->set_recovery_time(0.0f);
 				this_client->set_roll_recovery_time(0.0f);
@@ -377,7 +371,6 @@ void request_handler::HandleUpdate(vector<reply>& rep, client_ptr& this_client){
 	updateself_reply.add_to_buffers(this_client->get_block_health());
 	updateself_reply.add_to_buffers(this_client->get_temp_health());
 	updateself_reply.add_to_buffers(this_client->get_permanent_health());
-	updateself_reply.add_to_buffers(this_client->get_lives());
 	updateself_reply.add_to_buffers(this_client->get_blood_amount());
 	updateself_reply.add_to_buffers(this_client->get_recovery_time());
 	updateself_reply.add_to_buffers(this_client->get_roll_recovery_time());
@@ -415,7 +408,6 @@ void request_handler::HandleUpdate(vector<reply>& rep, client_ptr& this_client){
 		update_reply.add_to_buffers((item.second)->get_temp_health());
 		update_reply.add_to_buffers((item.second)->get_permanent_health());
 		update_reply.add_to_buffers((item.second)->get_knocked_out());
-		update_reply.add_to_buffers((item.second)->get_lives());
 		update_reply.add_to_buffers((item.second)->get_blood_amount());
 		update_reply.add_to_buffers((item.second)->get_recovery_time());
 		update_reply.add_to_buffers((item.second)->get_roll_recovery_time());
