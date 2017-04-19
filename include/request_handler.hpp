@@ -73,7 +73,6 @@ class request_handler {
 		string_vector seperate_string(string input, string seperator);
 		string create_new_uid(size_t length);
 		bool url_decode(const string& in, string& out);
-		bool handle_command(string_map& input, stack <reply>& rep);
 		void prepare_reply(vector<reply>& rep, string extension = "");
 		void HandleSignOn(vector<reply>& rep, client_ptr& this_client);
 		void HandleUpdate(vector<reply>& rep, client_ptr& this_client);
@@ -83,6 +82,7 @@ class request_handler {
 		void HandleServerInfo(vector<reply>& rep, client_ptr& this_client);
 		void HandleLevelList(vector<reply>& rep, client_ptr& this_client);
 		void HandlePlayerList(vector<reply>& rep, client_ptr& this_client);
+		void HandleUnknownMessage(vector<reply>& rep);
 		void AddErrorMessage(vector<reply>& rep, string message);
 		string GetString();
 		float GetFloat();

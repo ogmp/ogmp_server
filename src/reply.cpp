@@ -103,6 +103,13 @@ void reply::add_to_buffers(request_handler::message_type content){
 	buffer.push_back(content);
 }
 
+void reply::add_plain_text(std::string content){
+	const char* byte_array = content.c_str();
+	for(int i = 0; i < strlen(byte_array); i++){
+		buffer.push_back(content[i]);
+	}
+}
+
 void reply::add_to_buffers(char content){
 	buffer.push_back(content);
 }
@@ -154,11 +161,6 @@ vector<unsigned char> reply::intToByteArray(int value){
 	for (int i = 0; i < 4; i++){
 		return_bytes[3 - i] = (value >> (i * 8));
 	}
-	std::cout << "Buffer size " << value << std::endl;
-	std::cout << "Buffer 0 " << int(return_bytes[0]) << std::endl;
-	std::cout << "Buffer 1 " << int(return_bytes[1]) << std::endl;
-	std::cout << "Buffer 2 " << int(return_bytes[2]) << std::endl;
-	std::cout << "Buffer 3 " << int(return_bytes[3]) << std::endl;
 	return return_bytes;
 }
 
@@ -284,13 +286,6 @@ std::string to_string(reply::status_type status) {
 
 reply reply::stock_reply(reply::status_type status) {
 	reply rep;
-	rep.status = status;
-	rep.content = stock_replies::to_string(status);
-	rep.headers.resize(2);
-	rep.headers[0].name = "Content-Length";
-	rep.headers[0].value = std::to_string(rep.content.size());
-	rep.headers[1].name = "Content-Type";
-	rep.headers[1].value = "text/html";
 	return rep;
 }
 

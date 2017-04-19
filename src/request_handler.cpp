@@ -94,128 +94,6 @@ bool request_handler::url_decode(const string& in, string& out) {
 	return true;
 }
 
-bool request_handler::handle_command(string_map& input, stack <reply>& rep) {
-	// // Remove old clients that are not responding.
-	// client_map inactive_clients= client_manager_.pop_inactive_clients(start_);
-	// reply new_reply;
-	// // Announce quits.
-	// for(auto& item: inactive_clients) {
-	// 	// Add part message to all clients that are in the same
-	// 	// group as the timeouted client.
-	// 	string_map message;
-	// 
-	// 	message["type"] = "Message";
-	// 	message["name"] = "server";
-	// 	message["text"] = (item.second)->get_username() + " has left the room.";
-	// 	message["notif"] = "true";
-	// 
-	// 	client_manager_.add_command(message, item.second);
-	// 
-	// 	// Also add a part command.
-	// 	string_map part;
-	// 
-	// 	part["type"] = "RemoveCharacter";
-	// 	part["username"] = (item.second)->get_username();
-	// 
-	// 	client_manager_.add_command(part, item.second);
-	// 
-	// 	// Write the message to the logs.
-	// 	log::print(message["text"]);
-	// }
-	// 
-	// // First we check for commands that do not require to be an active player.
-	// if(input["type"] == "ListUsers") {
-	// 	client_map clients= client_manager_.get_clients();
-	// 
-	// 	string_map_vector answer;
-	// 
-	// 	for(auto& item: clients) {
-	// 		string_map user;
-	// 
-	// 		user["character"] = (item.second)->get_character();
-	// 		user["username"] = (item.second)->get_username();
-	// 		user["level"] = (item.second)->get_level();
-	// 
-	// 		answer.push_back(user);
-	// 	}
-	// 
-	// 	new_reply.content= encode_output(answer);
-	// 
-	// 	// Stop and send reply.
-	// 	return true;
-	// }
-	// 
-	// // Everything that follows now requires a valid uid (except signon).
-	// client_ptr player= client_manager_.get_client(input["uid"]);
-	// 
-	// if(input["type"] != "SignOn") {
-	// 	if(!player) {
-	// 		string_map answer;
-	// 
-	// 		answer["type"] = "Timeout";
-	// 
-	// 		new_reply.content= encode_output(answer);
-	// 
-	// 		// Stop and send reply.
-	// 		return true;
-	// 	}
-	// }
-	// 
-	// if(input["type"] == "SignOn") {
-	// } else if(input["type"] ==  "Update") {
-	// } else if(input["type"] == "SavePosition") {
-	// 	// Don't continue if disabled.
-	// 	if(!config_->get_allow_teleport()) {
-	// 		return true;
-	// 	}
-	// 
-	// 	// Create copies of the client coordinates.
-	// 	player->set_saved_posx(player->get_posx());
-	// 	player->set_saved_posy(player->get_posy());
-	// 	player->set_saved_posz(player->get_posz());
-	// 
-	// 	// Stop and send reply.
-	// 	return true;
-	// } else if(input["type"] == "LoadPosition") {
-	// 	// Don't continue if disabled.
-	// 	if(!config_->get_allow_teleport()) {
-	// 		return true;
-	// 	}
-	// 
-	// 	// Create answer.
-	// 	string_map answer;
-	// 
-	// 	answer["type"] = "LoadPosition";
-	// 	answer["posx"] = to_string(player->get_saved_posx());
-	// 	answer["posy"] = to_string(player->get_saved_posy());
-	// 	answer["posz"] = to_string(player->get_saved_posz());
-	// 
-	// 	new_reply.content= encode_output(answer);
-	// 
-	// 	// Stop and send reply.
-	// 	return true;
-	// } else if(input["type"] == "Message") {
-	// 	// Create message.
-	// 	string_map message;
-	// 
-	// 	message["type"] = "Message";
-	// 	message["name"] = input["name"];
-	// 	message["text"] = input["text"];
-	// 	message["notif"] = "false";
-	// 
-	// 	// Send message to everyone except the current client.
-	// 	client_manager_.add_command(message, player);
-	// 
-	// 	// Write the message to the logs.
-	// 	log::print(message["name"] + ": " + message["text"]);
-	// 
-	// 	// Stop and send reply.
-	// 	return true;
-	// }
-
-	return false;
-}
-
 void request_handler::AddErrorMessage(vector<reply>& rep, string message){
 	reply new_reply;
 	new_reply.add_to_buffers(Error);
@@ -271,16 +149,6 @@ void request_handler::HandleSignOn(vector<reply>& rep, client_ptr& this_client){
 	float posy = GetFloat();
 	float posz = GetFloat();
 	
-	cout << " Username " << username;
-	cout << " character " << character;
-	cout << " levelname " << levelname;
-	cout << " levelpath " << levelpath;
-	cout << " version " << version;
-	cout << " posx " << posx;
-	cout << " posy " << posy;
-	cout << " posz " << posz;
-	cout << endl;
-	
 	//Check if the level is a default level and set the name from there.
 	for (const auto& map : config_->get_map_list()) {
 		if( levelpath == map.second.data() ){
@@ -322,10 +190,7 @@ void request_handler::HandleSignOn(vector<reply>& rep, client_ptr& this_client){
 	this_client->set_level_path(levelpath);
 	this_client->set_username(username);
 	this_client->set_team(username);
-	
-	cout << this_client->get_level_name() << endl;
-	cout << this_client->get_level_path() << endl;
-	
+
 	this_client->set_posx(posx);
 	this_client->set_posy(posy);
 	this_client->set_posz(posz);
@@ -334,71 +199,10 @@ void request_handler::HandleSignOn(vector<reply>& rep, client_ptr& this_client){
 	this_client->set_saved_posx(posx);
 	this_client->set_saved_posy(posy);
 	this_client->set_saved_posz(posz);
-	
-	// if(character == "Guard") {
-	// 	character_dir = "guard";
-	// }else if(character == "Raider Rabbit") {
-	// 	character_dir = "raider_rabbit";
-	// }else if(character == "Pale Turner") {
-	// 	character_dir = "pale_turner";
-	// }else if(character == "Guard 2") {
-	// 	character_dir = "guard2";
-	// }else if(character == "Base Guard") {
-	// 	character_dir = "base_guard";
-	// }else if(character == "Cat") {
-	// 	character_dir = "cat";
-	// }else if(character == "Female Rabbit 1") {
-	// 	character_dir = "female_rabbit_1";
-	// }else if(character == "Female Rabbit 2") {
-	// 	character_dir = "female_rabbit_2";
-	// }else if(character == "Female Rabbit 3") {
-	// 	character_dir = "female_rabbit_3";
-	// }else if(character == "Rat") {
-	// 	character_dir = "rat";
-	// }else if(character == "Female Rat") {
-	// 	character_dir = "female_rat";
-	// }else if(character == "Hooded Rat") {
-	// 	character_dir = "hooded_rat";
-	// }else if(character == "Light Armored Dog Big") {
-	// 	character_dir = "lt_dog_big";
-	// }else if(character == "Light Armored Dog Female") {
-	// 	character_dir = "lt_dog_female";
-	// }else if(character == "Light Armored Dog Male 1") {
-	// 	character_dir = "lt_dog_male_1";
-	// }else if(character == "Light Armored Dog Male 2") {
-	// 	character_dir = "lt_dog_male_2";
-	// }else if(character == "Male Cat") {
-	// 	character_dir = "male_cat";
-	// }else if(character == "Female Cat") {
-	// 	character_dir = "female_cat";
-	// }else if(character == "Striped Cat") {
-	// 	character_dir = "striped_cat";
-	// }else if(character == "Fancy Striped Cat") {
-	// 	character_dir = "fancy_striped_cat";
-	// }else if(character == "Male Rabbit 1") {
-	// 	character_dir = "male_rabbit_1";
-	// }else if(character == "Male Rabbit 2") {
-	// 	character_dir = "male_rabbit_2";
-	// }else if(character == "Male Rabbit 3") {
-	// 	character_dir = "male_rabbit_3";
-	// }else if(character == "Male Wolf") {
-	// 	character_dir = "male_wolf";
-	// }else if(character == "Civilian") {
-	// 	character_dir = "civ";
-	// }else if(character == "Pale Rabbit Civilian") {
-	// 	character_dir = "pale_rabbit_civ";
-	// }else if(character == "Rabbot") {
-	// 	character_dir = "rabbot";
-	// }else if(character == "Turner") {
-	// 	character_dir = "turner";
-	// }else if(character == "Wolf") {
-	// 	character_dir = "wolf";
-	// }
+
 	this_client->set_character(character);
 	//When the signon is successful 
 	this_client->set_signed_on(true);
-	
-	cout << "Signed on " << this_client->get_signed_on() << endl;
 	
 	// Add the client to the client list.
 	client_manager_.add_client(this_client);
@@ -410,20 +214,15 @@ void request_handler::HandleSignOn(vector<reply>& rep, client_ptr& this_client){
 	new_reply.add_to_buffers(this_client->get_team());
 	new_reply.add_to_buffers(this_client->get_character());
 	new_reply.add_to_buffers(this_client->get_level_name());
-	new_reply.content = "SignOn";
 	
 	rep.push_back(new_reply);
 	
 	// Now add join commands for all other clients in the same group.
 	client_map other_clients = client_manager_.get_clients(this_client);
 	
-	cout << "The client manager has " << other_clients.size() << " clients" << endl;
-	
 	for(auto& item: other_clients) {
 		reply spawn_character_reply;
-		spawn_character_reply.content = "SpawnCharacter";
-		cout << "Adding SpawnCharacter command for all the character that are already on the server!" << endl;
-		
+
 		spawn_character_reply.add_to_buffers(SpawnCharacter);
 		spawn_character_reply.add_to_buffers((item.second)->get_username());
 		spawn_character_reply.add_to_buffers((item.second)->get_username());
@@ -445,7 +244,7 @@ void request_handler::HandleSignOn(vector<reply>& rep, client_ptr& this_client){
 	
 	// Write the message to the logs.
 	log::print(this_client->get_username() + " has entered the room.");
-	
+
 	// Send join command to other players.
 	reply spawn_character_reply;
 	
@@ -456,7 +255,6 @@ void request_handler::HandleSignOn(vector<reply>& rep, client_ptr& this_client){
 	spawn_character_reply.add_to_buffers(this_client->get_posx());
 	spawn_character_reply.add_to_buffers(this_client->get_posy());
 	spawn_character_reply.add_to_buffers(this_client->get_posz());
-	spawn_character_reply.content = "SpawnCharacter";
 
 	client_manager_.add_to_inbox(spawn_character_reply, this_client);
 }
@@ -520,7 +318,6 @@ void request_handler::HandleUpdate(vector<reply>& rep, client_ptr& this_client){
 	this_client->set_state(state);
 
 	// Add commands from queue if available.
-	cout << "Number of inbox messages " << this_client->get_number_of_inbox_messages() << endl;
 	while(this_client->get_number_of_inbox_messages() != 0) {
 		reply message = this_client->get_inbox_message();
 		rep.push_back(message);
@@ -640,6 +437,8 @@ void request_handler::HandleChatMessage(vector<reply>& rep, client_ptr& this_cli
 	chat_message.add_to_buffers(this_client->get_username());
 	chat_message.add_to_buffers(chat_message_content);
 	chat_message.add_to_buffers(false);
+	
+	log::print(this_client->get_username() + ": " + chat_message_content);
 
 	client_manager_.add_to_inbox(chat_message, this_client);
 	this_client->add_to_inbox(chat_message);
@@ -673,73 +472,75 @@ void request_handler::HandleLoadPositionMessage(vector<reply>& rep, client_ptr& 
 }
 
 void request_handler::handle_request(const request& req, vector<reply>& rep, client_ptr& this_client, char* data_, std::size_t bytes_transferred) {
-
-	for(uint i = 0; i < bytes_transferred; i++){
-		cout << (int)data[i] << " ";
-	}
-	cout << endl;
-	
 	data_index = 1;
 	data = data_;
 	switch(data[0]){
 		case SignOn :
 		{
-			cout << "Received signon message" << endl;
+			// cout << "Received signon message" << endl;
 			HandleSignOn(rep, this_client);
 			break;
 		}
 		case UpdateGame :
 		{
-			cout << "Received UpdateGame message" << endl;
+			// cout << "Received UpdateGame message" << endl;
 			HandleUpdate(rep, this_client);
 			break;
 		}
 		case UpdateSelf :
 		{
-			cout << "Received UpdateSelf message" << endl;
+			// cout << "Received UpdateSelf message" << endl;
 			break;
 		}
 		case Message :
 		{
-			cout << "Received Message message" << endl;
+			// cout << "Received Message message" << endl;
 			HandleChatMessage(rep, this_client);
 			break;
 		}
 		case SavePosition :
 		{
-			cout << "Received SavePosition message" << endl;
+			// cout << "Received SavePosition message" << endl;
 			HandleSavePositionMessage(this_client);
 			break;
 		}
 		case LoadPosition :
 		{
-			cout << "Received LoadPosition message" << endl;
+			// cout << "Received LoadPosition message" << endl;
 			HandleLoadPositionMessage(rep, this_client);
 			break;
 		}
 		case ServerInfo :
 		{
+			// cout << "Received ServerInfo message" << endl;
 			HandleServerInfo(rep, this_client);
 			break;
 		}
 		case LevelList :
 		{
-			cout << "Received LevelList message" << endl;
+			// cout << "Received LevelList message" << endl;
 			HandleLevelList(rep, this_client);
 			break;
 		}
 		case PlayerList :
 		{
-			cout << "Received PlayerList message" << endl;
+			// cout << "Received PlayerList message" << endl;
 			HandlePlayerList(rep, this_client);
 			break;
 		}
 		default :
 		{
-			cout << "Received Unknown message" << endl;
+			// cout << "Received Unknown message" << endl;
+			HandleUnknownMessage(rep);
 		}
 	}
 	return;
+}
+
+void request_handler::HandleUnknownMessage(vector<reply>& rep){
+	reply unkown_message;
+	unkown_message.add_plain_text("Go away!");
+	rep.push_back(unkown_message);
 }
 
 void request_handler::HandlePlayerList(vector<reply>& rep, client_ptr& this_client){
@@ -776,7 +577,8 @@ void request_handler::client_disconnected(client_ptr& this_client) {
 	disconnect_message.add_to_buffers(this_client->get_username() + " has left the room.");
 	disconnect_message.add_to_buffers(true);
 	client_manager_.add_to_inbox(disconnect_message, this_client);
-	
+	log::print(this_client->get_username() + " has left the room.");
+
 	// Send remove character message to other players.
 	reply remove_character;
 	
