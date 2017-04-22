@@ -288,7 +288,7 @@ void request_handler::HandleUpdate(vector<reply>& rep, client_ptr& this_client){
 	
 	float recovery_time = GetFloat();
 	float roll_recovery_time = GetFloat();
-	int ragdoll_type = GetInt();
+	this_client->set_ragdoll_type(GetInt());
 	int blood_delay = GetInt();
 	bool cut_throat = GetBool();
 	int state = GetInt();
@@ -374,6 +374,7 @@ void request_handler::HandleUpdate(vector<reply>& rep, client_ptr& this_client){
 	updateself_reply.add_to_buffers(this_client->get_blood_amount());
 	updateself_reply.add_to_buffers(this_client->get_recovery_time());
 	updateself_reply.add_to_buffers(this_client->get_roll_recovery_time());
+	updateself_reply.add_to_buffers(this_client->get_ragdoll_type());
 	updateself_reply.add_to_buffers(this_client->get_remove_blood());
 	updateself_reply.add_to_buffers(this_client->get_cut_throat());
 
@@ -411,6 +412,7 @@ void request_handler::HandleUpdate(vector<reply>& rep, client_ptr& this_client){
 		update_reply.add_to_buffers((item.second)->get_blood_amount());
 		update_reply.add_to_buffers((item.second)->get_recovery_time());
 		update_reply.add_to_buffers((item.second)->get_roll_recovery_time());
+		update_reply.add_to_buffers((item.second)->get_ragdoll_type());
 		update_reply.add_to_buffers((item.second)->get_remove_blood());
 		update_reply.add_to_buffers((item.second)->get_blood_delay());
 		update_reply.add_to_buffers((item.second)->get_cut_throat());
