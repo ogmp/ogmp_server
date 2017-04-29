@@ -162,8 +162,6 @@ void client_manager::get_player_list(reply& rep, client_ptr initiator) {
 		return;
 	}
 	for(auto& current_client: clients_) {
-		cout << (current_client.second)->get_level_path() << endl;
-		cout << initiator->get_level_path() << endl;
 		if((current_client.second)->get_level_path() == initiator->get_level_path()) {
 			rep.add_to_buffers((current_client.second)->get_username());
 			rep.add_to_buffers((current_client.second)->get_character());
