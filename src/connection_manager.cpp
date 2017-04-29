@@ -1,6 +1,4 @@
 #include "connection_manager.hpp"
-#include "connection.hpp"
-#include <thread>
 
 namespace http {
 namespace server {
@@ -9,10 +7,21 @@ connection_manager::connection_manager() {
 }
 
 void connection_manager::start(connection_ptr c) {
-	
-	std::thread connection_thread(&connection::start, c);
-	//connection_thread.join();
-	connection_thread.detach();
+	connections_.insert(c);
+	c->start();
+}
+
+void connection_manager::stop(connection_ptr c) {
+	connections_.erase(c);
+	c->stop();
+}
+
+void connection_manager::stop_all() {
+	for (auto c: connections_) {
+		c->stop();
+	}
+
+	connections_.clear();
 }
 
 } // namespace server

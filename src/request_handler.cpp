@@ -9,13 +9,26 @@
 #include <sstream>
 #include <ctime>
 #include <time.h>
+#include <map>
 #include <boost/format.hpp>
 #include <boost/algorithm/string/replace.hpp>
+#include <stack>
 
 namespace http {
 namespace server {
 
 using namespace std;
+
+template <typename T>
+
+struct my_id_translator
+{
+    typedef T internal_type;
+    typedef T external_type;
+
+    boost::optional<T> get_value(const T &v) { return  v.substr(1, v.size() - 2) ; }
+    boost::optional<T> put_value(const T &v) { return '"' + v +'"'; }
+};
 
 request_handler::request_handler(config_ptr conf, const string& doc_root) :
 config_(conf), doc_root_(doc_root), client_manager_(conf) {
@@ -81,585 +94,500 @@ bool request_handler::url_decode(const string& in, string& out) {
 	return true;
 }
 
-bool request_handler::handle_command(string_map& input, reply& rep) {
-	// Remove old clients that are not responding.
-	client_map inactive_clients= client_manager_.pop_inactive_clients(start_);
-
-	// Announce quits.
-	for(auto& item: inactive_clients) {
-		// Add part message to all clients that are in the same
-		// group as the timeouted client.
-		string_map message;
-
-		message["type"] = "Message";
-		message["name"] = "server";
-		message["text"] = (item.second)->get_username() + " has left the room.";
-		message["notif"] = "true";
-
-		client_manager_.add_command(message, item.second);
-
-		// Also add a part command.
-		string_map part;
-
-		part["type"] = "RemoveCharacter";
-		part["username"] = (item.second)->get_username();
-
-		client_manager_.add_command(part, item.second);
-
-		// Write the message to the logs.
-		log::print(message["text"]);
-	}
-
-	// First we check for commands that do not require to be an active player.
-	if(input["type"] == "ListUsers") {
-		client_map clients= client_manager_.get_clients();
-
-		string_map_vector answer;
-
-		for(auto& item: clients) {
-			string_map user;
-
-			user["character"] = (item.second)->get_character();
-			user["username"] = (item.second)->get_username();
-			user["level"] = (item.second)->get_level();
-
-			answer.push_back(user);
-		}
-
-		rep.content= encode_output(answer);
-
-		// Stop and send reply.
-		return true;
-	}
-
-	// Everything that follows now requires a valid uid (except signon).
-	client_ptr player= client_manager_.get_client(input["uid"]);
-
-	if(input["type"] != "SignOn") {
-		if(!player) {
-			string_map answer;
-
-			answer["type"] = "Timeout";
-
-			rep.content= encode_output(answer);
-
-			// Stop and send reply.
-			return true;
-		}
-	}
-
-	if(input["type"] == "SignOn") {
-		string new_uid= create_new_uid(10);
-		string character_dir = "turner";
-		double signon_time= difftime(time(0), start_);
-
-		// Check if someone is already using that username.
-		client_map all_clients= client_manager_.get_clients();
-
-		for(auto& item: all_clients) {
-			if((item.second)->get_username() == input["username"]) {
-				string_map answer;
-
-				answer["type"] = "Error";
-				answer["reason"] = "Username already existing.";
-
-				rep.content= encode_output(answer);
-
-				// Stop and send reply.
-				return true;
-			}
-		}
-
-		// Create a new client.
-		client_ptr new_player(new client());
-
-		new_player->set_uid(new_uid);
-		new_player->set_level(input["level"]);
-		new_player->set_username(input["username"]);
-		new_player->set_team(create_new_uid(4));
-		new_player->set_last_updated(signon_time + 30); // Give the client more time.
-
-		// Set coordinates to default if not set for compatibility with ogmp_clients < 0.0.3.
-		if(input.find("posx") == input.end()) {
-			input["posx"] = "0";
-		}
-
-		if(input.find("posy") == input.end()) {
-			input["posy"] = "0";
-		}
-
-		if(input.find("posz") == input.end()) {
-			input["posz"] = "0";
-		}
-
-		new_player->set_posx(stof(input["posx"]));
-		new_player->set_posy(stof(input["posy"]));
-		new_player->set_posz(stof(input["posz"]));
-
-		// Set default teleport to the spawn position.
-		new_player->set_saved_posx(stof(input["posx"]));
-		new_player->set_saved_posy(stof(input["posy"]));
-		new_player->set_saved_posz(stof(input["posz"]));
-
-		if(input["character"] == "Guard") {
-			character_dir = "guard";
-		}else if(input["character"] == "Raider+Rabbit") {
-			character_dir = "raider_rabbit";
-		}else if(input["character"] == "Pale+Turner") {
-			character_dir = "pale_turner";
-		}else if(input["character"] == "Guard+2") {
-			character_dir = "guard2";
-		}else if(input["character"] == "Base+Guard") {
-			character_dir = "base_guard";
-		}else if(input["character"] == "Cat") {
-			character_dir = "cat";
-		}else if(input["character"] == "Female+Rabbit+1") {
-			character_dir = "female_rabbit_1";
-		}else if(input["character"] == "Female+Rabbit+2") {
-			character_dir = "female_rabbit_2";
-		}else if(input["character"] == "Female+Rabbit+3") {
-			character_dir = "female_rabbit_3";
-		}else if(input["character"] == "Rat") {
-			character_dir = "rat";
-		}else if(input["character"] == "Female+Rat") {
-			character_dir = "female_rat";
-		}else if(input["character"] == "Hooded+Rat") {
-			character_dir = "hooded_rat";
-		}else if(input["character"] == "Light+Armored+Dog+Big") {
-			character_dir = "lt_dog_big";
-		}else if(input["character"] == "Light+Armored+Dog+Female") {
-			character_dir = "lt_dog_female";
-		}else if(input["character"] == "Light+Armored+Dog+Male+1") {
-			character_dir = "lt_dog_male_1";
-		}else if(input["character"] == "Light+Armored+Dog+Male+2") {
-			character_dir = "lt_dog_male_2";
-		}else if(input["character"] == "Male+Cat") {
-			character_dir = "male_cat";
-		}else if(input["character"] == "Female+Cat") {
-			character_dir = "female_cat";
-		}else if(input["character"] == "Striped+Cat") {
-			character_dir = "striped_cat";
-		}else if(input["character"] == "Fancy+Striped+Cat") {
-			character_dir = "fancy_striped_cat";
-		}else if(input["character"] == "Male+Rabbit+1") {
-			character_dir = "male_rabbit_1";
-		}else if(input["character"] == "Male+Rabbit+2") {
-			character_dir = "male_rabbit_2";
-		}else if(input["character"] == "Male+Rabbit+3") {
-			character_dir = "male_rabbit_3";
-		}else if(input["character"] == "Male+Wolf") {
-			character_dir = "male_wolf";
-		}else if(input["character"] == "Civilian") {
-			character_dir = "civ";
-		}else if(input["character"] == "Pale+Rabbit+Civilian") {
-			character_dir = "pale_rabbit_civ";
-		}else if(input["character"] == "Rabbot") {
-			character_dir = "rabbot";
-		}else if(input["character"] == "Turner") {
-			character_dir = "turner";
-		}else if(input["character"] == "Wolf") {
-			character_dir = "wolf";
-		}
-		new_player->set_character(character_dir);
-
-		// Add the client to the client list.
-		client_manager_.add_client(new_player);
-
-		// Create answer for current client.
-		string_map_vector answer;
-
-		// First add a signon command.
-		string_map signon;
-
-		signon["type"] = "SignOn";
-		signon["uid"] = new_uid;
-		signon["refr"] = to_string(config_->get_update_refresh_rate());
-		signon["welcome_message"] = config_->get_welcome_message();
-		signon["username"] = new_player->get_username();
-		signon["team"] = new_player->get_team();
-		signon["character"] = character_dir;
-		signon["server"] = input["server"];
-
-		answer.push_back(signon);
-
-		// Now add join commands for all other clients in the same group.
-		client_map other_clients= client_manager_.get_clients(new_player);
-
-		for(auto& item: other_clients) {
-			string_map join;
-
-			join["type"] = "SpawnCharacter";
-			join["username"] = (item.second)->get_username();
-			join["team"] = (item.second)->get_team();
-			join["character"] = (item.second)->get_character();
-			join["posx"] = to_string((item.second)->get_posx());
-			join["posy"] = to_string((item.second)->get_posy());
-			join["posz"] = to_string((item.second)->get_posz());
-
-			answer.push_back(join);
-		}
-
-		rep.content= encode_output(answer);
-
-		// Send message command to other players.
-		string_map message;
-
-		message["type"] = "Message";
-		message["name"] = "server";
-		message["text"] = new_player->get_username() + " has entered the room.";
-		message["notif"] = "true";
-
-		client_manager_.add_command(message, new_player);
-
-		// Write the message to the logs.
-		log::print(message["text"]);
-
-		// Send join command to other players.
-		string_map join;
-
-		join["type"] = "SpawnCharacter";
-		join["username"] = new_player->get_username();
-		join["team"] = new_player->get_team();
-		join["character"] = new_player->get_character();
-		join["posx"] = to_string(new_player->get_posx());
-		join["posy"] = to_string(new_player->get_posy());
-		join["posz"] = to_string(new_player->get_posz());
-
-		client_manager_.add_command(join, new_player);
-
-		// Stop and send reply.
-		return true;
-	} else if(input["type"] ==  "Update") {
-		// Update player states.
-		player->set_posx(stof(input["posx"]));
-		player->set_posy(stof(input["posy"]));
-		player->set_posz(stof(input["posz"]));
-		player->set_dirx(stof(input["dirx"]));
-		player->set_dirz(stof(input["dirz"]));
-
-		player->set_crouch((input["crouch"] == "true"));
-		player->set_jump((input["jump"] == "true"));
-		player->set_attack((input["attack"] == "true"));
-		player->set_grab((input["grab"] == "true"));
-		player->set_item((input["item"] == "true"));
-		player->set_drop((input["drop"] == "true"));
-		player->set_roll((input["roll"] == "true"));
-		player->set_jumpoffwall((input["offwall"] == "true"));
-		player->set_activeblock((input["activeblock"] == "true"));
-
-		if((player->get_time_of_death() < 1) || (difftime(time(0), player->get_time_of_death()) > 10)) {
-			// Do not allow players to increase some parts of their health.
-			if(stof(input["blood_health"]) < player->get_blood_health()) {
-				player->set_blood_health(stof(input["blood_health"]));
-			}
-			if(stof(input["permanent_health"]) < player->get_permanent_health()) {
-				player->set_permanent_health(stof(input["permanent_health"]));
-			}
-			if(stoi(input["knocked_out"]) > player->get_knocked_out()) {
-				player->set_knocked_out(stoi(input["knocked_out"]));
-			}
-			if(stoi(input["lives"]) < player->get_lives()) {
-				player->set_lives(stoi(input["lives"]));
-			}
-			player->set_blood_damage(stof(input["blood_damage"]));
-			player->set_block_health(stof(input["block_health"]));
-			player->set_temp_health(stof(input["temp_health"]));
-		}
-
-		player->set_blood_delay(stoi(input["blood_delay"]));
-		player->set_cut_throat((input["cut_throat"] == "true"));
-		player->set_state(stoi(input["state"]));
-
-		player->set_last_updated(difftime(time(0), start_));
-
-		// Prepare the answer.
-		string_map_vector answer;
-
-		//If there are new players signing on then first return these commands
-		//The other commands will be send on the next update
-		if(player->contains_signon()){
-			for(auto &command : player->get_signon_commands()){
-				answer.push_back(command);
-			}
-			return true;
-		}
-
-		// Add commands from queue if available.
-		while(player->get_number_of_commands() != 0) {
-			answer.push_back(player->get_command());
-		}
-
-		// Check if the player died (we consider unconscious as dead for now).
-		if((player->get_permanent_health() <= 0.0f)
-		|| (player->get_blood_health() <= 0.0f)
-		|| (player->get_temp_health() <= 0.0f)
-		|| (player->get_knocked_out() == _dead)
-		|| (player->get_lives() < 0)) {
-			// Only announce death once.
-			if(!player->get_death_changed()) {
-				player->set_death_changed(true);
-				player->set_time_of_death(time(0));
-
-				// Send message to all players in the group.
-				string_map message;
-
-				message["type"] = "Message";
-				message["name"] = "server";
-				message["text"] = player->get_username() + " has died.";
-				message["notif"] = "true";
-
-				client_manager_.add_command(message, player);
-
-				// Also send the message to player himself.
-				answer.push_back(message);
-			} else {
-				// Revive the player after some seconds (experimental).
-				if(difftime(time(0), player->get_time_of_death()) > 5) {
-					player->set_blood_health(1.0f);
-					player->set_permanent_health(1.0f);
-					player->set_blood_damage(0.0f);
-					player->set_block_health(1.0f);
-					player->set_temp_health(1.0f);
-					player->set_knocked_out(_awake);
-					player->set_lives(1);
-					player->set_blood_amount(10.0f);
-					player->set_recovery_time(0.0f);
-					player->set_roll_recovery_time(0.0f);
-					player->set_remove_blood(true);
-					player->set_cut_throat(false);
-				}
-			}
-		} else {
-			player->set_death_changed(false);
-			player->set_remove_blood(false);
-		}
-
-		// Send health back to player.
-		string_map update_self;
-
-		update_self["type"] = "UpdateSelf";
-		update_self["blood_damage"] = to_string(player->get_blood_damage());
-		update_self["blood_health"] = to_string(player->get_blood_health());
-		update_self["block_health"] = to_string(player->get_block_health());
-		update_self["temp_health"] = to_string(player->get_temp_health());
-		update_self["permanent_health"] = to_string(player->get_permanent_health());
-		update_self["knocked_out"] = to_string(player->get_knocked_out());
-		update_self["lives"] = to_string(player->get_lives());
-		update_self["blood_amount"] = to_string(player->get_blood_amount());
-		update_self["recovery_time"] = to_string(player->get_recovery_time());
-		update_self["roll_recovery_time"] = to_string(player->get_roll_recovery_time());
-		update_self["remove_blood"] = to_string(player->get_remove_blood());
-		update_self["cut_throat"] = to_string(player->get_cut_throat());
-
-		answer.push_back(update_self);
-
-		// Get states of the other clients.
-		client_map other_clients= client_manager_.get_clients(player);
-
-		for(auto& item: other_clients) {
-			string_map update;
-
-			update["type"] = "Update";
-			update["username"] = (item.second)->get_username();
-			update["posx"] = to_string((item.second)->get_posx());
-			update["posy"] = to_string((item.second)->get_posy());
-			update["posz"] = to_string((item.second)->get_posz());
-			update["dirx"] = to_string((item.second)->get_dirx());
-			update["dirz"] = to_string((item.second)->get_dirz());
-			update["crouch"] = to_string((item.second)->get_crouch());
-			update["jump"] = to_string((item.second)->get_jump());
-			update["attack"] = to_string((item.second)->get_attack());
-			update["grab"] = to_string((item.second)->get_grab());
-			update["item"] = to_string((item.second)->get_item());
-			update["drop"] = to_string((item.second)->get_drop());
-			update["roll"] = to_string((item.second)->get_roll());
-			update["offwall"] = to_string((item.second)->get_jumpoffwall());
-			update["activeblock"] = to_string((item.second)->get_activeblock());
-			update["blood_damage"] = to_string((item.second)->get_blood_damage());
-			update["blood_health"] = to_string((item.second)->get_blood_health());
-			update["block_health"] = to_string((item.second)->get_block_health());
-			update["temp_health"] = to_string((item.second)->get_temp_health());
-			update["permanent_health"] = to_string((item.second)->get_permanent_health());
-			update["knocked_out"] = to_string((item.second)->get_knocked_out());
-			update["lives"] = to_string((item.second)->get_lives());
-			update["blood_amount"] = to_string((item.second)->get_blood_amount());
-			update["recovery_time"] = to_string((item.second)->get_recovery_time());
-			update["roll_recovery_time"] = to_string((item.second)->get_roll_recovery_time());
-			update["remove_blood"] = to_string((item.second)->get_remove_blood());
-			update["blood_delay"] = to_string((item.second)->get_blood_delay());
-			update["cut_throat"] = to_string((item.second)->get_cut_throat());
-			update["state"] = to_string((item.second)->get_state());
-
-			answer.push_back(update);
-		}
-
-		rep.content= encode_output(answer);
-
-		// Stop and send reply.
-		return true;
-	} else if(input["type"] == "SavePosition") {
-		// Don't continue if disabled.
-		if(!config_->get_allow_teleport()) {
-			return true;
-		}
-
-		// Create copies of the client coordinates.
-		player->set_saved_posx(player->get_posx());
-		player->set_saved_posy(player->get_posy());
-		player->set_saved_posz(player->get_posz());
-
-		// Stop and send reply.
-		return true;
-	} else if(input["type"] == "LoadPosition") {
-		// Don't continue if disabled.
-		if(!config_->get_allow_teleport()) {
-			return true;
-		}
-
-		// Create answer.
-		string_map answer;
-
-		answer["type"] = "LoadPosition";
-		answer["posx"] = to_string(player->get_saved_posx());
-		answer["posy"] = to_string(player->get_saved_posy());
-		answer["posz"] = to_string(player->get_saved_posz());
-
-		rep.content= encode_output(answer);
-
-		// Stop and send reply.
-		return true;
-	} else if(input["type"] == "Message") {
-		// Create message.
-		string_map message;
-
-		message["type"] = "Message";
-		message["name"] = input["name"];
-		message["text"] = input["text"];
-		message["notif"] = "false";
-
-		// Send message to everyone except the current client.
-		client_manager_.add_command(message, player);
-
-		// Write the message to the logs.
-		log::print(message["name"] + ": " + message["text"]);
-
-		// Stop and send reply.
-		return true;
-	}
-
-	return false;
+void request_handler::AddErrorMessage(vector<reply>& rep, string message){
+	reply new_reply;
+	new_reply.add_to_buffers(Error);
+	new_reply.add_to_buffers(message);
+	rep.push_back(new_reply);
 }
 
-void request_handler::handle_request(const request& req, reply& rep) {
-	// Decode url to path.
-	string request_path;
-
-	if(!url_decode(req.uri, request_path)) {
-		rep= reply::stock_reply(reply::bad_request);
-		return;
+string request_handler::GetString(){
+	int size = (int)data[data_index];
+	data_index++;
+	string output;
+	for(int i = 0; i < size; i++, data_index++){
+		output += data[data_index];
 	}
+	return output;
+}
 
-	if(config_->get_debug()) {
-		cout << "req.uri: " << req.uri << "\trequest_path: " << request_path << "\n";
+float request_handler::GetFloat(){
+	char b[] = {data[data_index + 3], data[data_index + 2], data[data_index + 1], data[data_index]};
+	float f;
+	memcpy(&f, &b, sizeof(f));
+	data_index += 4;
+	return f;
+}
+
+bool request_handler::GetBool(){
+	bool value = false;
+	if(data[data_index] == 1){
+		value = true;
 	}
+	data_index++;
+	return value;
+}
 
-	// Parse post content.
-	if(!req.post_content.empty()) {
-		if(config_->get_debug()) {
-			cout << "post: " << req.post_content << "\n";
+int request_handler::GetInt(){
+	int value = (int)data[data_index];
+	data_index++;
+	return value;
+}
+
+void request_handler::HandleSignOn(vector<reply>& rep, client_ptr& this_client){
+	client new_client;
+	this_client = boost::make_shared<client>(new_client);
+	reply new_reply;
+
+	string username = GetString();
+	string character = GetString();
+	string levelname = GetString();
+	string levelpath = GetString();
+	string version = GetString();
+	
+	float posx = GetFloat();
+	float posy = GetFloat();
+	float posz = GetFloat();
+	
+	//Check if the level is a default level and set the name from there.
+	for (const auto& map : config_->get_map_list()) {
+		if( levelpath == map.second.data() ){
+			levelname = map.first.data();
+			break;
 		}
-
-		string_map input;
-		string post_content= req.post_content;
-
-		string_vector content;
-		content= seperate_string(post_content, "&");
-
-		for(auto& item: content) {
-			string_vector name_value= seperate_string(item, "=");
-
-			if (name_value.size() == 2) {
-				input[name_value[0]]= name_value[1];
+	}
+	
+	if(!config_->get_allow_other_maps()){
+		vector<pair<string, string>> allowed_maps = config_->get_map_list();
+		bool allowed = false;
+		for(auto& item: allowed_maps) {
+			if(levelpath == item.second){
+				allowed = true;
+				break;
 			}
 		}
-
-		try {
-			if(handle_command(input, rep)) {
-				return prepare_reply(rep);
-			}
-		} catch(...) {
-			std::cerr << "handle_command error: " << post_content << "\n";
-
-			rep= reply::stock_reply(reply::bad_request);
+		if(!allowed){
+			AddErrorMessage(rep, "This level is not allowed on this server!");
 			return;
 		}
-
-		// If we are still in this method there was no command handler.
-		rep= reply::stock_reply(reply::not_found);
-		return;
 	}
 
-	// Request path must be absolute and not contain "..".
-	if(request_path.empty() || request_path[0] != '/' || request_path.find("..") != string::npos) {
-		rep= reply::stock_reply(reply::bad_request);
-		return;
+	string character_dir = "turner";
+	double signon_time= difftime(time(0), start_);
+	
+	// Check if someone is already using that username.
+	client_map all_clients= client_manager_.get_clients();
+	
+	for(auto& item: all_clients) {
+		if((item.second)->get_username() == username) {
+			AddErrorMessage(rep, "Already a user with that username!");
+			// Stop and send reply.
+			return;
+		}
 	}
+	
+	this_client->set_level_name(levelname);
+	this_client->set_level_path(levelpath);
+	this_client->set_username(username);
+	this_client->set_team(username);
 
-	// If path ends in slash (i.e. is a directory) then add "index.html".
-	if(request_path[request_path.size() - 1] == '/') {
-		request_path+= "index.html";
+	this_client->set_posx(posx);
+	this_client->set_posy(posy);
+	this_client->set_posz(posz);
+	
+	// Set default teleport to the spawn position.
+	this_client->set_saved_posx(posx);
+	this_client->set_saved_posy(posy);
+	this_client->set_saved_posz(posz);
+
+	this_client->set_character(character);
+	//When the signon is successful 
+	this_client->set_signed_on(true);
+	
+	// Add the client to the client list.
+	client_manager_.add_client(this_client);
+	
+	new_reply.add_to_buffers(SignOn);
+	new_reply.add_to_buffers(config_->get_update_refresh_rate());
+	new_reply.add_to_buffers(this_client->get_username());
+	new_reply.add_to_buffers(config_->get_welcome_message());
+	new_reply.add_to_buffers(this_client->get_team());
+	new_reply.add_to_buffers(this_client->get_character());
+	new_reply.add_to_buffers(this_client->get_level_name());
+	
+	rep.push_back(new_reply);
+	
+	// Now add join commands for all other clients in the same group.
+	client_map other_clients = client_manager_.get_clients(this_client);
+	
+	for(auto& item: other_clients) {
+		reply spawn_character_reply;
+
+		spawn_character_reply.add_to_buffers(SpawnCharacter);
+		spawn_character_reply.add_to_buffers((item.second)->get_username());
+		spawn_character_reply.add_to_buffers((item.second)->get_username());
+		spawn_character_reply.add_to_buffers((item.second)->get_character());
+		spawn_character_reply.add_to_buffers((item.second)->get_posx());
+		spawn_character_reply.add_to_buffers((item.second)->get_posy());
+		spawn_character_reply.add_to_buffers((item.second)->get_posz());
+		rep.push_back(spawn_character_reply);
 	}
+	
+	// Send message command to other players.
+	reply message_reply;
+	
+	message_reply.add_to_buffers(Message);
+	message_reply.add_to_buffers((string)"server");
+	message_reply.add_to_buffers(this_client->get_username() + " has entered the room.");
+	message_reply.add_to_buffers(true);
+	client_manager_.add_to_inbox(message_reply, this_client);
+	
+	// Write the message to the logs.
+	log::print(this_client->get_username() + " has entered the room.");
 
-	// Determine the file extension.
-	size_t last_slash_pos= request_path.find_last_of("/");
-	size_t last_dot_pos= request_path.find_last_of(".");
-	string extension;
+	// Send join command to other players.
+	reply spawn_character_reply;
+	
+	spawn_character_reply.add_to_buffers(SpawnCharacter);
+	spawn_character_reply.add_to_buffers(this_client->get_username());
+	spawn_character_reply.add_to_buffers(this_client->get_team());
+	spawn_character_reply.add_to_buffers(this_client->get_character());
+	spawn_character_reply.add_to_buffers(this_client->get_posx());
+	spawn_character_reply.add_to_buffers(this_client->get_posy());
+	spawn_character_reply.add_to_buffers(this_client->get_posz());
 
-	if(last_dot_pos != string::npos && last_dot_pos > last_slash_pos) {
-		extension= request_path.substr(last_dot_pos + 1);
-	}
-
-	// Open the file to send back.
-	string full_path= doc_root_ + request_path;
-	ifstream is(full_path.c_str(), ios::in | ios::binary);
-
-	if(!is) {
-		rep= reply::stock_reply(reply::not_found);
-		return;
-	}
-
-	// Fill out the reply to be sent to the client.
-	rep.status= reply::ok;
-	char buf[512];
-
-	while(is.read(buf, sizeof(buf)).gcount() > 0) {
-		rep.content.append(buf, is.gcount());
-	}
-
-	return prepare_reply(rep, extension);
+	client_manager_.add_to_inbox(spawn_character_reply, this_client);
 }
 
-void request_handler::prepare_reply(reply& rep, string extension) {
-	rep.status= reply::ok;
+void request_handler::HandleUpdate(vector<reply>& rep, client_ptr& this_client){
+	// Update player states.
 
-	rep.headers.resize(2);
-	rep.headers[0].name= "Content-Length";
-	rep.headers[0].value= to_string(rep.content.size());
-	rep.headers[1].name= "Content-Type";
-	rep.headers[1].value= mime_types::extension_to_type(extension);
+	this_client->set_posx(GetFloat());
+	this_client->set_posy(GetFloat());
+	this_client->set_posz(GetFloat());
+	this_client->set_dirx(GetFloat());
+	this_client->set_dirz(GetFloat());
+
+	this_client->set_crouch(GetBool());
+	this_client->set_jump(GetBool());
+	this_client->set_attack(GetBool());
+	this_client->set_grab(GetBool());
+	this_client->set_item(GetBool());
+	this_client->set_drop(GetBool());
+	this_client->set_roll(GetBool());
+	this_client->set_jumpoffwall(GetBool());
+	this_client->set_activeblock(GetBool());
+	
+	float blood_damage = GetFloat();
+	float blood_health = GetFloat();
+	float block_health = GetFloat();
+	float temp_health = GetFloat();
+	float permanent_health = GetFloat();
+	int knocked_out = GetInt();
+	float blood_amount = GetFloat();
+	
+	float recovery_time = GetFloat();
+	float roll_recovery_time = GetFloat();
+	this_client->set_ragdoll_type(GetInt());
+	int blood_delay = GetInt();
+	bool cut_throat = GetBool();
+	int state = GetInt();
+	
+	if((this_client->get_time_of_death() < 1) || (difftime(time(0), this_client->get_time_of_death()) > 10)) {
+		// Do not allow this_clients to increase some parts of their health.
+		if(blood_health < this_client->get_blood_health()) {
+			this_client->set_blood_health(blood_health);
+		}
+		if(permanent_health < this_client->get_permanent_health()) {
+			this_client->set_permanent_health(permanent_health);
+		}
+		if(knocked_out > this_client->get_knocked_out()) {
+			this_client->set_knocked_out(knocked_out);
+		}
+		this_client->set_blood_damage(blood_damage);
+		this_client->set_block_health(block_health);
+		this_client->set_temp_health(temp_health);
+	}
+
+	this_client->set_blood_delay(blood_delay);
+	this_client->set_cut_throat(cut_throat);
+	this_client->set_state(state);
+
+	// Add commands from queue if available.
+	while(this_client->get_number_of_inbox_messages() != 0) {
+		reply message = this_client->get_inbox_message();
+		rep.push_back(message);
+	}
+
+	// Check if the player died (we consider unconscious as dead for now).
+	if((this_client->get_permanent_health() <= 0.0f)
+	|| (this_client->get_blood_health() <= 0.0f)
+	|| (this_client->get_temp_health() <= 0.0f)
+	|| (this_client->get_knocked_out() != _awake)) {
+		// Only announce death once.
+		if(!this_client->get_death_changed()) {
+			this_client->set_death_changed(true);
+			this_client->set_time_of_death(time(0));
+
+			// Send message to all players in the group.
+			reply died_message;
+			
+			died_message.add_to_buffers(Message);
+			died_message.add_to_buffers((string)"server");
+			died_message.add_to_buffers(this_client->get_username() + " has died.");
+			died_message.add_to_buffers(true);
+
+			client_manager_.add_to_inbox(died_message, this_client);
+
+			// Also send the message to player himself.
+			this_client->add_to_inbox(died_message);
+		} else {
+			// Revive the player after some seconds (experimental).
+			if(difftime(time(0), this_client->get_time_of_death()) > 5) {
+				this_client->set_blood_health(1.0f);
+				this_client->set_permanent_health(1.0f);
+				this_client->set_blood_damage(0.0f);
+				this_client->set_block_health(1.0f);
+				this_client->set_temp_health(1.0f);
+				this_client->set_knocked_out(_awake);
+				this_client->set_blood_amount(10.0f);
+				this_client->set_recovery_time(0.0f);
+				this_client->set_roll_recovery_time(0.0f);
+				this_client->set_remove_blood(true);
+				this_client->set_cut_throat(false);
+			}
+		}
+	} else {
+		this_client->set_death_changed(false);
+		this_client->set_remove_blood(false);
+	}
+	
+	// Send health back to player.
+	reply updateself_reply;
+	
+	updateself_reply.add_to_buffers(UpdateSelf);
+	updateself_reply.add_to_buffers(this_client->get_blood_damage());
+	updateself_reply.add_to_buffers(this_client->get_blood_health());
+	updateself_reply.add_to_buffers(this_client->get_block_health());
+	updateself_reply.add_to_buffers(this_client->get_temp_health());
+	updateself_reply.add_to_buffers(this_client->get_permanent_health());
+	updateself_reply.add_to_buffers(this_client->get_blood_amount());
+	updateself_reply.add_to_buffers(this_client->get_recovery_time());
+	updateself_reply.add_to_buffers(this_client->get_roll_recovery_time());
+	updateself_reply.add_to_buffers(this_client->get_ragdoll_type());
+	updateself_reply.add_to_buffers(this_client->get_remove_blood());
+	updateself_reply.add_to_buffers(this_client->get_cut_throat());
+
+	//TODO maybe just send this when needed.
+	rep.push_back(updateself_reply);
+
+	// Get states of the other clients.
+	client_map other_clients = client_manager_.get_clients(this_client);
+
+	for(auto& item: other_clients) {
+		reply update_reply;
+		
+		update_reply.add_to_buffers(UpdateCharacter);
+		update_reply.add_to_buffers((item.second)->get_username());
+		update_reply.add_to_buffers((item.second)->get_posx());
+		update_reply.add_to_buffers((item.second)->get_posy());
+		update_reply.add_to_buffers((item.second)->get_posz());
+		update_reply.add_to_buffers((item.second)->get_dirx());
+		update_reply.add_to_buffers((item.second)->get_dirz());
+		update_reply.add_to_buffers((item.second)->get_crouch());
+		update_reply.add_to_buffers((item.second)->get_jump());
+		update_reply.add_to_buffers((item.second)->get_attack());
+		update_reply.add_to_buffers((item.second)->get_grab());
+		update_reply.add_to_buffers((item.second)->get_item());
+		update_reply.add_to_buffers((item.second)->get_drop());
+		update_reply.add_to_buffers((item.second)->get_roll());
+		update_reply.add_to_buffers((item.second)->get_jumpoffwall());
+		update_reply.add_to_buffers((item.second)->get_activeblock());
+		update_reply.add_to_buffers((item.second)->get_blood_damage());
+		update_reply.add_to_buffers((item.second)->get_blood_health());
+		update_reply.add_to_buffers((item.second)->get_block_health());
+		update_reply.add_to_buffers((item.second)->get_temp_health());
+		update_reply.add_to_buffers((item.second)->get_permanent_health());
+		update_reply.add_to_buffers((item.second)->get_knocked_out());
+		update_reply.add_to_buffers((item.second)->get_blood_amount());
+		update_reply.add_to_buffers((item.second)->get_recovery_time());
+		update_reply.add_to_buffers((item.second)->get_roll_recovery_time());
+		update_reply.add_to_buffers((item.second)->get_ragdoll_type());
+		update_reply.add_to_buffers((item.second)->get_remove_blood());
+		update_reply.add_to_buffers((item.second)->get_blood_delay());
+		update_reply.add_to_buffers((item.second)->get_cut_throat());
+		update_reply.add_to_buffers((item.second)->get_state());
+
+		rep.push_back(update_reply);
+	}
+}
+
+void request_handler::HandleChatMessage(vector<reply>& rep, client_ptr& this_client){
+	// Send message to all players in the group.
+	reply chat_message;
+	string chat_message_source = GetString();
+	string chat_message_content = GetString();
+	chat_message.add_to_buffers(Message);
+	chat_message.add_to_buffers(this_client->get_username());
+	chat_message.add_to_buffers(chat_message_content);
+	chat_message.add_to_buffers(false);
+	
+	log::print(this_client->get_username() + ": " + chat_message_content);
+
+	client_manager_.add_to_inbox(chat_message, this_client);
+	this_client->add_to_inbox(chat_message);
+}
+
+void request_handler::HandleSavePositionMessage(client_ptr& this_client){
+	// Don't continue if disabled.
+	if(!config_->get_allow_teleport()) {
+		return;
+	}
+
+	// Create copies of the client coordinates.
+	this_client->set_saved_posx(this_client->get_posx());
+	this_client->set_saved_posy(this_client->get_posy());
+	this_client->set_saved_posz(this_client->get_posz());
+	
+}
+
+void request_handler::HandleLoadPositionMessage(vector<reply>& rep, client_ptr& this_client){
+	// Don't continue if disabled.
+	if(!config_->get_allow_teleport()) {
+		return;
+	}
+
+	reply load_position_message;
+	load_position_message.add_to_buffers(LoadPosition);
+	load_position_message.add_to_buffers(this_client->get_saved_posx());
+	load_position_message.add_to_buffers(this_client->get_saved_posy());
+	load_position_message.add_to_buffers(this_client->get_saved_posz());
+	rep.push_back(load_position_message);
+}
+
+void request_handler::handle_request(const request& req, vector<reply>& rep, client_ptr& this_client, char* data_, std::size_t bytes_transferred) {
+	data_index = 1;
+	data = data_;
+	switch(data[0]){
+		case SignOn :
+		{
+			// cout << "Received signon message" << endl;
+			HandleSignOn(rep, this_client);
+			break;
+		}
+		case UpdateGame :
+		{
+			// cout << "Received UpdateGame message" << endl;
+			HandleUpdate(rep, this_client);
+			break;
+		}
+		case UpdateSelf :
+		{
+			// cout << "Received UpdateSelf message" << endl;
+			break;
+		}
+		case Message :
+		{
+			// cout << "Received Message message" << endl;
+			HandleChatMessage(rep, this_client);
+			break;
+		}
+		case SavePosition :
+		{
+			// cout << "Received SavePosition message" << endl;
+			HandleSavePositionMessage(this_client);
+			break;
+		}
+		case LoadPosition :
+		{
+			// cout << "Received LoadPosition message" << endl;
+			HandleLoadPositionMessage(rep, this_client);
+			break;
+		}
+		case ServerInfo :
+		{
+			// cout << "Received ServerInfo message" << endl;
+			HandleServerInfo(rep, this_client);
+			break;
+		}
+		case LevelList :
+		{
+			// cout << "Received LevelList message" << endl;
+			HandleLevelList(rep, this_client);
+			break;
+		}
+		case PlayerList :
+		{
+			// cout << "Received PlayerList message" << endl;
+			HandlePlayerList(rep, this_client);
+			break;
+		}
+		default :
+		{
+			// cout << "Received Unknown message" << endl;
+			HandleUnknownMessage(rep);
+		}
+	}
+	return;
+}
+
+void request_handler::HandleUnknownMessage(vector<reply>& rep){
+	reply unkown_message;
+	unkown_message.add_plain_text("Go away!");
+	rep.push_back(unkown_message);
+}
+
+void request_handler::HandlePlayerList(vector<reply>& rep, client_ptr& this_client){
+	reply playerlist_message;
+	playerlist_message.add_to_buffers(PlayerList);
+	client_manager_.get_player_list(playerlist_message, this_client);
+	rep.push_back(playerlist_message);
+}
+
+void request_handler::HandleServerInfo(vector<reply>& rep, client_ptr& this_client){
+	reply serverinfo_message;
+	serverinfo_message.add_to_buffers(ServerInfo);
+	serverinfo_message.add_to_buffers(config_->get_server_name());
+	serverinfo_message.add_to_buffers(client_manager_.get_nr_players());
+	rep.push_back(serverinfo_message);
+}
+
+void request_handler::HandleLevelList(vector<reply>& rep, client_ptr& this_client){
+	reply serverinfo_message;
+	serverinfo_message.add_to_buffers(LevelList);
+	client_manager_.get_level_list(serverinfo_message);
+	rep.push_back(serverinfo_message);
+}
+
+void request_handler::client_disconnected(client_ptr& this_client) {
+	if(this_client == NULL){
+		return;
+	}
+	// Send disconnect message to other players.
+	reply disconnect_message;
+	
+	disconnect_message.add_to_buffers(Message);
+	disconnect_message.add_to_buffers((string)"server");
+	disconnect_message.add_to_buffers(this_client->get_username() + " has left the room.");
+	disconnect_message.add_to_buffers(true);
+	client_manager_.add_to_inbox(disconnect_message, this_client);
+	log::print(this_client->get_username() + " has left the room.");
+
+	// Send remove character message to other players.
+	reply remove_character;
+	
+	remove_character.add_to_buffers(RemoveCharacter);
+	remove_character.add_to_buffers(this_client->get_username());
+	client_manager_.add_to_inbox(remove_character, this_client);
+	client_manager_.remove_client(this_client);
+}
+
+void request_handler::prepare_reply(vector<reply>& rep, string extension) {
+	
 }
 
 string request_handler::encode_output(string_map output) {
 	stringstream answer;
-
-	// XXX: this is a hack, because type has to be first element
-	if(output.find("type") != output.end()) {
-		answer << "type=" << output["type"];
-		if(output.size() > 1) {
-			answer << "&";
-		}
-		output.erase("type");
-	}
 
 	for(auto it = output.begin(); it != output.end(); ++it) {
 		// Add separator for all but the first element.

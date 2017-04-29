@@ -190,7 +190,7 @@ request_parser::result_type request_parser::consume(request& req, char input) {
 			if(input == '\n') {
 				// If the request is a post request the server needs to read the post message in the HTTP body.
 				if(req.method == "POST") {
-					state_= read_post_content;
+					state_= read_content;
 
 					for(auto& item: req.headers) {
 						// Loop through all the header messages and find the length variable.
@@ -215,10 +215,10 @@ request_parser::result_type request_parser::consume(request& req, char input) {
 			} else {
 				return bad;
 			}
-		case read_post_content:
+		case read_content:
 			// As long as the loop isn't at the size of the message we keep pushing the chars on the content.
 			if(post_char_counter_ <= post_size_) {
-				req.post_content.push_back(input);
+				req.content.push_back(input);
 				if(post_char_counter_ == post_size_) {
 					// And finally stop reading when the last character is reached.
 					return good;

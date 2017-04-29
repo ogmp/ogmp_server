@@ -10,6 +10,7 @@ typedef std::map<std::string, std::string> string_map;
 typedef std::vector<string_map> string_map_vector;
 
 #define _awake 0
-#define _dead  2
+#define _unconscious 1
+#define _dead 2
 
 #endif // HTTP_SHARED_HPP

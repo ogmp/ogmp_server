@@ -2,6 +2,13 @@
 #define HTTP_REQUEST_PARSER_HPP
 
 #include <tuple>
+#include <boost/property_tree/ptree.hpp>
+#include <boost/property_tree/json_parser.hpp>
+#include "request_parser.hpp"
+#include "request.hpp"
+#include <iostream>
+#include <fstream>
+#include <string>
 
 namespace http {
 namespace server {
@@ -26,12 +33,8 @@ class request_parser {
 		/// has been consumed.
 		template <typename InputIterator>
 		std::tuple<result_type, InputIterator> parse(request& req, InputIterator begin, InputIterator end) {
-			while(begin != end) {
-				result_type result= consume(req, *begin++);
-				if(result == good || result == bad)
-					return std::make_tuple(result, begin);
-			}
-			return std::make_tuple(indeterminate, begin);
+			//TODO check if request is valid.
+			return std::make_tuple(good, begin);
 		}
 
 	private:
@@ -53,6 +56,8 @@ class request_parser {
 		// Create post variables.
 		int post_size_;
 		int post_char_counter_;
+
+		boost::property_tree::ptree pt;
 
 		/// The current state of the parser.
 		enum state {
@@ -77,7 +82,7 @@ class request_parser {
 			expecting_newline_2,
 			expecting_newline_3,
 			//An additional variable to store the post content.
-			read_post_content
+			read_content
 		} state_;
 };
 

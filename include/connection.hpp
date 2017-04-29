@@ -10,7 +10,9 @@
 #include <memory>
 #include <boost/asio.hpp>
 #include <mutex>
+#include <stack>
 
+using namespace std;
 namespace http {
 namespace server {
 
@@ -24,7 +26,7 @@ class connection : public std::enable_shared_from_this<connection> {
 
 		/// Construct a connection with the given socket.
 		explicit connection(boost::asio::ip::tcp::socket socket,
-		connection_manager& manager, request_handler& handler, std::mutex& connection_mutex);
+		connection_manager& manager, request_handler& handler);
 
 		/// Start the first asynchronous operation for the connection.
 		void start();
@@ -47,21 +49,20 @@ class connection : public std::enable_shared_from_this<connection> {
 
 		/// The handler used to process the incoming request.
 		request_handler& request_handler_;
-		
-		/// The mutex to prevent race conditions on the clients data
-		std::mutex& connection_mutex_;
 
 		/// Buffer for incoming data.
 		std::array<char, 8192> buffer_;
 
 		/// The incoming request.
 		request request_;
+		
+		//There is one client per connection
+		client_ptr this_client_;
 
 		/// The parser for the incoming request.
 		request_parser request_parser_;
-
-		/// The reply to be sent back to the client.
-		reply reply_;
+		
+		vector<reply> replies_;
 };
 
 typedef std::shared_ptr<connection> connection_ptr;

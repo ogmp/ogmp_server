@@ -1,27 +1,32 @@
 #include "client.hpp"
+#include "reply.hpp"
 
 namespace http {
 namespace server {
 
 using namespace std;
 
-client::client() : uid_(""), username_(""), team_(""), character_(""), level_(""),
+client::client() : uid_(""), username_(""), team_(""), character_(""), level_path_(""), level_name_(""),
 posx_(0.0f), posy_(0.0f), posz_(0.0f), dirx_(0.0f), dirz_(0.0f), saved_posx_(0.0f),
 saved_posy_(0.0f), saved_posz_(0.0f), iscrouching_(false), isjumping_(false),
 isattacking_(false), isgrabbing_(false), isusingitem_(false), isdropping_(false),
 isrolling_(false), isjumpingoffwall_(false), isactiveblocking_(false),
 blood_damage_(0.0f), blood_health_(1.0f), block_health_(1.0f), temp_health_(1.0f),
-permanent_health_(1.0f), knocked_out_(_awake), lives_(1), blood_amount_(10.0f),
+permanent_health_(1.0f), knocked_out_(_awake), blood_amount_(10.0f),
 recovery_time_(0.0f), roll_recovery_time_(0.0f), ragdoll_type_(0), time_of_death_(0),
-remove_blood_(false), blood_delay_(0), cut_throat_(false), state_(0) {
+remove_blood_(false), blood_delay_(0), cut_throat_(false), state_(0), has_signed_on_(false) {
 }
 
 void client::set_uid(string uid) {
 	uid_ = uid;
 }
 
-void client::set_level(string level) {
-	level_ = level;
+void client::set_level_path(string level_path) {
+	level_path_ = level_path;
+}
+
+void client::set_level_name(string level_name) {
+	level_name_ = level_name;
 }
 
 void client::set_username(string username) {
@@ -34,6 +39,10 @@ void client::set_team(string team) {
 
 void client::add_command(string_map command) {
 	commands_.push_back(command);
+}
+
+void client::add_to_inbox(reply& command) {
+	inbox_.push_back(command);
 }
 
 void client::set_last_updated(double current_seconds) {
@@ -132,12 +141,12 @@ void client::set_death_changed(bool death_changed) {
 	death_changed_ = death_changed;
 }
 
-void client::set_time_of_death(double current_seconds) {
-	time_of_death_ = current_seconds;
+void client::set_signed_on(bool signed_on){
+	has_signed_on_ = signed_on;
 }
 
-void client::set_lives(int lives) {
-	lives_ = lives;
+void client::set_time_of_death(double current_seconds) {
+	time_of_death_ = current_seconds;
 }
 
 void client::set_blood_amount(float blood_amount) {
@@ -184,8 +193,12 @@ string client::get_uid() {
 	return uid_;
 }
 
-string client::get_level() {
-	return level_;
+string client::get_level_name() {
+	return level_name_;
+}
+
+string client::get_level_path() {
+	return level_path_;
 }
 
 string client::get_username() {
@@ -201,6 +214,11 @@ string_map client::get_command() {
 	commands_.pop_back();
 	return command;
 }
+reply client::get_inbox_message() {
+	reply message = inbox_.back();
+	inbox_.pop_back();
+	return message;
+}
 
 string client::get_character() {
 	return character_;
@@ -212,6 +230,10 @@ double client::get_last_updated() {
 
 int client::get_number_of_commands() {
 	return commands_.size();
+}
+
+int client::get_number_of_inbox_messages() {
+	return inbox_.size();
 }
 
 float client::get_posx() {
@@ -314,10 +336,6 @@ double client::get_time_of_death() {
 	return time_of_death_;
 }
 
-int client::get_lives() {
-	return lives_;
-}
-
 float client::get_blood_amount() {
 	return blood_amount_;
 }
@@ -348,6 +366,10 @@ bool client::get_cut_throat() {
 
 int client::get_state() {
 	return state_;
+}
+
+bool client::get_signed_on(){
+	return has_signed_on_;
 }
 
 bool client::contains_signon(){
