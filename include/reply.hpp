@@ -1,7 +1,6 @@
 #ifndef HTTP_REPLY_HPP
 #define HTTP_REPLY_HPP
 
-#include "header.hpp"
 #include <string>
 #include <vector>
 #include <boost/asio.hpp>
@@ -12,9 +11,6 @@ namespace server {
 
 /// A reply to be sent to a client.
 struct reply {
-	/// The headers to be included in the reply.
-	std::vector<header> headers;
-
 	/// The content to be sent in the reply.
 	std::vector<char> buffer;
 
