@@ -32,7 +32,7 @@ void connection::do_read() {
 				if(result == request_parser::good) {
 					request_handler_.handle_request(request_, replies_, this_client_, buffer_.data(), bytes_transferred);
 					do_write();
-					do_read();					
+					do_read();
 				} else if(result == request_parser::bad) {
 					do_write();
 					// cout << "Closing connection because of bad request." << endl;
@@ -51,29 +51,25 @@ void connection::do_read() {
 
 void connection::do_write() {
 	auto self(shared_from_this());
-	if(!replies_.size() > 0){
-		return;
-	}
-	reply& current_reply = replies_.front();
-	current_reply.add_size_byte();
-	boost::asio::async_write(socket_, current_reply.to_buffers(),
-	[this, self, current_reply](boost::system::error_code ec, std::size_t) {
-		//Close the connection if it was an http request, a error on the socket happened or if the signon failed
-		if (ec || !this_client_ || !this_client_->get_signed_on()) {
-			// Initiate graceful connection closure.
-			boost::system::error_code ignored_ec;
-			socket_.shutdown(boost::asio::ip::tcp::socket::shutdown_both,
-				ignored_ec);
-		}
-		if (ec == boost::asio::error::operation_aborted) {
-			request_handler_.client_disconnected(this_client_);
-			connection_manager_.stop(shared_from_this());
-		}
+	while(replies_.size() > 0){
+		reply& current_reply = replies_.front();
+		current_reply.add_size_byte();
+		boost::asio::async_write(socket_, current_reply.to_buffers(),
+		[this, self, current_reply](boost::system::error_code ec, std::size_t) {
+			//Close the connection if it was an http request, a error on the socket happened or if the signon failed
+			if (ec || !this_client_ || !this_client_->get_signed_on()) {
+				// Initiate graceful connection closure.
+				boost::system::error_code ignored_ec;
+				socket_.shutdown(boost::asio::ip::tcp::socket::shutdown_both,
+					ignored_ec);
+			}
+			if (ec == boost::asio::error::operation_aborted) {
+				request_handler_.client_disconnected(this_client_);
+				connection_manager_.stop(shared_from_this());
+			}
+		});
 		replies_.erase (replies_.begin());
-		if(replies_.size() > 0){
-				do_write();
-		}
-	});
+	}
 }
 
 } // namespace server
