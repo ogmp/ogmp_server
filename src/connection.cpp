@@ -40,10 +40,11 @@ void connection::do_read() {
 				} else {
 					do_read();
 				}
-			} else if(ec != boost::asio::error::operation_aborted) {
-					// cout << "connection closed" << endl;
-					request_handler_.client_disconnected(this_client_);
-					connection_manager_.stop(shared_from_this());
+            //An error occured.
+			} else {
+				// cout << "connection closed" << endl;
+				request_handler_.client_disconnected(this_client_);
+				connection_manager_.stop(shared_from_this());
 			}
 
 	});
@@ -57,15 +58,17 @@ void connection::do_write() {
 		boost::asio::async_write(socket_, current_reply.to_buffers(),
 		[this, self, current_reply](boost::system::error_code ec, std::size_t) {
 			//Close the connection if it was an http request, a error on the socket happened or if the signon failed
-			if (ec || !this_client_ || !this_client_->get_signed_on()) {
+			if (ec && !this_client_->get_signed_on() || !this_client_->get_signed_on() || !this_client_ ) {
 				// Initiate graceful connection closure.
 				boost::system::error_code ignored_ec;
-				socket_.shutdown(boost::asio::ip::tcp::socket::shutdown_both,
-					ignored_ec);
+				socket_.shutdown(boost::asio::ip::tcp::socket::shutdown_both, ignored_ec);
+                return;
 			}
-			if (ec == boost::asio::error::operation_aborted) {
+            //The player is already signed on, but some error occured.
+            else if (ec) {
 				request_handler_.client_disconnected(this_client_);
 				connection_manager_.stop(shared_from_this());
+                return;
 			}
 		});
 		replies_.erase (replies_.begin());
