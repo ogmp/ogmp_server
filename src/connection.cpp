@@ -35,18 +35,15 @@ void connection::do_read() {
 					do_read();
 				} else if(result == request_parser::bad) {
 					do_write();
-					// cout << "Closing connection because of bad request." << endl;
 					connection_manager_.stop(shared_from_this());
 				} else {
 					do_read();
 				}
-            //An error occured.
-			} else {
-				// cout << "connection closed" << endl;
+            } //An error occured.
+            else if( !this_client_ || ec) {
 				request_handler_.client_disconnected(this_client_);
 				connection_manager_.stop(shared_from_this());
 			}
-
 	});
 }
 
@@ -62,6 +59,7 @@ void connection::do_write() {
 				// Initiate graceful connection closure.
 				boost::system::error_code ignored_ec;
 				socket_.shutdown(boost::asio::ip::tcp::socket::shutdown_both, ignored_ec);
+                return;
 			}
             //The player is already signed on, but some error occured.
             else if (ec) {
