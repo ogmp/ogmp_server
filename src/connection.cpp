@@ -58,11 +58,10 @@ void connection::do_write() {
 		boost::asio::async_write(socket_, current_reply.to_buffers(),
 		[this, self, current_reply](boost::system::error_code ec, std::size_t) {
 			//Close the connection if it was an http request, a error on the socket happened or if the signon failed
-			if (ec && !this_client_->get_signed_on() || !this_client_->get_signed_on() || !this_client_ ) {
+			if ( !this_client_ || ec && !this_client_->get_signed_on() || !this_client_->get_signed_on() ) {
 				// Initiate graceful connection closure.
 				boost::system::error_code ignored_ec;
 				socket_.shutdown(boost::asio::ip::tcp::socket::shutdown_both, ignored_ec);
-                return;
 			}
             //The player is already signed on, but some error occured.
             else if (ec) {
