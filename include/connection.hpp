@@ -40,6 +40,16 @@ class connection : public std::enable_shared_from_this<connection> {
 
 		/// Perform an asynchronous write operation.
 		void do_write();
+        
+        /// Timeout variables and function
+        void client_timed_out();
+        
+        bool ignore_timeout = false;
+        
+        bool read_more = false;
+        
+        boost::asio::deadline_timer* m_timer;
+        int readdata = 0;
 
 		/// Socket for the connection.
 		boost::asio::ip::tcp::socket socket_;

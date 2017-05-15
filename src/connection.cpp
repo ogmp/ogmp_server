@@ -14,37 +14,55 @@ request_handler_(handler) {
 }
 
 void connection::start() {
+    m_timer = new boost::asio::deadline_timer(socket_.get_io_service());
 	do_read();
 }
 
 void connection::stop() {
+    request_handler_.client_disconnected(this_client_);
 	socket_.close();
+}
+
+void connection::client_timed_out(){
+    if(!ignore_timeout){
+        cout << "Client timed out" << endl;
+        connection_manager_.stop(shared_from_this());
+    }
+    ignore_timeout = false;
 }
 
 void connection::do_read() {
 	auto self(shared_from_this());
+    
+    m_timer->expires_from_now(boost::posix_time::seconds(15));
+    m_timer->async_wait(boost::bind(&connection::client_timed_out, this));
+    
+    read_more = false;
 	socket_.async_read_some(boost::asio::buffer(buffer_),
 		[this, self](boost::system::error_code ec, std::size_t bytes_transferred) {
-			if(!ec) {
+            if(!ec) {
 				request_parser::result_type result;
 				std::tie(result, std::ignore) = request_parser_.parse(
 				request_, buffer_.data(), buffer_.data() + bytes_transferred);
-				if(result == request_parser::good) {
-					request_handler_.handle_request(request_, replies_, this_client_, buffer_.data(), bytes_transferred);
-					do_write();
-					do_read();
-				} else if(result == request_parser::bad) {
-					do_write();
-					connection_manager_.stop(shared_from_this());
-				} else {
-					do_read();
-				}
-            } //An error occured.
-            else if( !this_client_ || ec) {
-				request_handler_.client_disconnected(this_client_);
+                //result returns good or bad.
+                request_handler_.handle_request(request_, replies_, this_client_, buffer_.data(), bytes_transferred);
+                do_write();
+            }
+            else if (ec) {
 				connection_manager_.stop(shared_from_this());
 			}
+            read_more = true;
 	});
+    while (socket_.get_io_service().run_one()){
+        if (read_more){
+            ignore_timeout = true;
+            m_timer->cancel();
+            if(socket_.is_open()){
+                do_read();
+            }
+            break;
+        }
+    }
 }
 
 void connection::do_write() {
@@ -59,13 +77,10 @@ void connection::do_write() {
 				// Initiate graceful connection closure.
 				boost::system::error_code ignored_ec;
 				socket_.shutdown(boost::asio::ip::tcp::socket::shutdown_both, ignored_ec);
-                return;
 			}
             //The player is already signed on, but some error occured.
             else if (ec) {
-				request_handler_.client_disconnected(this_client_);
 				connection_manager_.stop(shared_from_this());
-                return;
 			}
 		});
 		replies_.erase (replies_.begin());
