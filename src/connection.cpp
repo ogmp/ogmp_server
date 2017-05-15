@@ -20,28 +20,29 @@ void connection::start() {
 
 void connection::stop() {
     request_handler_.client_disconnected(this_client_);
-	socket_.close();
+	socket_.close();    
 }
 
-void connection::client_timed_out(){
-    if(!ignore_timeout){
-        cout << "Client timed out" << endl;
-        log::print("Client timed out " + this_client_->get_username());
-        boost::system::error_code ignored_ec;
-        socket_.shutdown(boost::asio::ip::tcp::socket::shutdown_both, ignored_ec);
+void connection::client_timed_out(const boost::system::error_code& ec){
+    // cout << "Error " << ec.message() << endl;
+    if(ec != boost::asio::error::operation_aborted){
+        if(this_client_){
+            cout << "Client timed out" << endl;
+            log::print("Client timed out " + this_client_->get_username());
+        }
+        connection_manager_.stop(shared_from_this());
     }
-    ignore_timeout = false;
 }
 
 void connection::do_read() {
 	auto self(shared_from_this());
     
     m_timer->expires_from_now(boost::posix_time::seconds(remove_delay));
-    m_timer->async_wait(boost::bind(&connection::client_timed_out, this));
+    m_timer->async_wait(boost::bind(&connection::client_timed_out, this, _1));
     
-    read_more = false;
 	socket_.async_read_some(boost::asio::buffer(buffer_),
 		[this, self](boost::system::error_code ec, std::size_t bytes_transferred) {
+            m_timer->cancel_one();
             if(!ec) {
 				request_parser::result_type result;
 				std::tie(result, std::ignore) = request_parser_.parse(
@@ -49,23 +50,12 @@ void connection::do_read() {
                 //result returns good or bad.
                 request_handler_.handle_request(request_, replies_, this_client_, buffer_.data(), bytes_transferred);
                 do_write();
-            }
-            else if (ec) {
-                // cout << "Error " << ec.message() << endl;
-				connection_manager_.stop(shared_from_this());
-			}
-            read_more = true;
-	});
-    while (socket_.get_io_service().run_one()){
-        if (read_more){
-            ignore_timeout = true;
-            m_timer->cancel();
-            if(socket_.is_open()){
                 do_read();
+            }else if(ec) {
+                // cout << "Error " << ec.message() << endl;
+                connection_manager_.stop(shared_from_this());
             }
-            break;
-        }
-    }
+	});
 }
 
 void connection::do_write() {
@@ -80,11 +70,12 @@ void connection::do_write() {
 				// Initiate graceful connection closure.
 				boost::system::error_code ignored_ec;
 				socket_.shutdown(boost::asio::ip::tcp::socket::shutdown_both, ignored_ec);
+                return;
 			}
             //The player is already signed on, but some error occured.
             else if (ec) {
-                cout << "Error2" << endl;
 				connection_manager_.stop(shared_from_this());
+                return;
 			}
 		});
 		replies_.erase (replies_.begin());

@@ -43,11 +43,7 @@ class connection : public std::enable_shared_from_this<connection> {
 		void do_write();
         
         /// Timeout variables and function
-        void client_timed_out();
-        
-        bool ignore_timeout = false;
-        
-        bool read_more = false;
+        void client_timed_out(const boost::system::error_code& ec);
         
         int remove_delay;
         
