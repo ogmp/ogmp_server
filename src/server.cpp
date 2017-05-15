@@ -51,7 +51,7 @@ void server::do_accept() {
 
 		if (!ec) {
 			connection_manager_.start(make_shared<connection>(
-				move(socket_), connection_manager_, request_handler_
+				move(socket_), connection_manager_, request_handler_, config_->get_remove_delay()
 			));
 		}
 

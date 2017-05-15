@@ -8,9 +8,9 @@ namespace http {
 namespace server {
 
 connection::connection(boost::asio::ip::tcp::socket socket,
-connection_manager& manager, request_handler& handler) :
+connection_manager& manager, request_handler& handler, int delay) :
 socket_(std::move(socket)), connection_manager_(manager),
-request_handler_(handler) {
+request_handler_(handler), remove_delay(delay){
 }
 
 void connection::start() {
@@ -26,7 +26,9 @@ void connection::stop() {
 void connection::client_timed_out(){
     if(!ignore_timeout){
         cout << "Client timed out" << endl;
-        connection_manager_.stop(shared_from_this());
+        log::print("Client timed out " + this_client_->get_username());
+        boost::system::error_code ignored_ec;
+        socket_.shutdown(boost::asio::ip::tcp::socket::shutdown_both, ignored_ec);
     }
     ignore_timeout = false;
 }
@@ -34,7 +36,7 @@ void connection::client_timed_out(){
 void connection::do_read() {
 	auto self(shared_from_this());
     
-    m_timer->expires_from_now(boost::posix_time::seconds(15));
+    m_timer->expires_from_now(boost::posix_time::seconds(remove_delay));
     m_timer->async_wait(boost::bind(&connection::client_timed_out, this));
     
     read_more = false;
@@ -49,6 +51,7 @@ void connection::do_read() {
                 do_write();
             }
             else if (ec) {
+                // cout << "Error " << ec.message() << endl;
 				connection_manager_.stop(shared_from_this());
 			}
             read_more = true;
@@ -80,6 +83,7 @@ void connection::do_write() {
 			}
             //The player is already signed on, but some error occured.
             else if (ec) {
+                cout << "Error2" << endl;
 				connection_manager_.stop(shared_from_this());
 			}
 		});

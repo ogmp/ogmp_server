@@ -11,6 +11,7 @@
 #include <boost/asio.hpp>
 #include <mutex>
 #include <stack>
+#include "log.hpp"
 
 using namespace std;
 namespace http {
@@ -26,7 +27,7 @@ class connection : public std::enable_shared_from_this<connection> {
 
 		/// Construct a connection with the given socket.
 		explicit connection(boost::asio::ip::tcp::socket socket,
-		connection_manager& manager, request_handler& handler);
+		connection_manager& manager, request_handler& handler, int delay);
 
 		/// Start the first asynchronous operation for the connection.
 		void start();
@@ -47,6 +48,8 @@ class connection : public std::enable_shared_from_this<connection> {
         bool ignore_timeout = false;
         
         bool read_more = false;
+        
+        int remove_delay;
         
         boost::asio::deadline_timer* m_timer;
         int readdata = 0;
