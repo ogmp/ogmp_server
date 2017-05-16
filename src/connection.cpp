@@ -27,7 +27,6 @@ void connection::client_timed_out(const boost::system::error_code& ec){
     // cout << "Error " << ec.message() << endl;
     if(ec != boost::asio::error::operation_aborted){
         if(this_client_){
-            cout << "Client timed out" << endl;
             log::print("Client timed out " + this_client_->get_username());
         }
         connection_manager_.stop(shared_from_this());
@@ -42,7 +41,6 @@ void connection::do_read() {
     
 	socket_.async_read_some(boost::asio::buffer(buffer_),
 		[this, self](boost::system::error_code ec, std::size_t bytes_transferred) {
-            m_timer->cancel_one();
             if(!ec) {
 				request_parser::result_type result;
 				std::tie(result, std::ignore) = request_parser_.parse(
@@ -50,8 +48,10 @@ void connection::do_read() {
                 //result returns good or bad.
                 request_handler_.handle_request(request_, replies_, this_client_, buffer_.data(), bytes_transferred);
                 do_write();
+                m_timer->cancel_one();
                 do_read();
             }else if(ec) {
+                m_timer->cancel_one();
                 // cout << "Error " << ec.message() << endl;
                 connection_manager_.stop(shared_from_this());
             }
