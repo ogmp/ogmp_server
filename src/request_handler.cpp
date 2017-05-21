@@ -148,6 +148,13 @@ void request_handler::HandleSignOn(vector<reply>& rep, client_ptr& this_client){
 	float posx = GetFloat();
 	float posy = GetFloat();
 	float posz = GetFloat();
+    
+    int minimum_length = 5;
+    if(levelname.length() < minimum_length || levelpath.length() < minimum_length){
+        AddErrorMessage(rep, "The level you are trying to use is not valid!");
+        log::print( "Client tried to connect with invalid values " + levelname + " " + levelpath);
+        return;
+    }
 	
 	//Check if the level is a default level and set the name from there.
 	for (const auto& map : config_->get_map_list()) {
