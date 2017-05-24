@@ -135,6 +135,10 @@ int request_handler::GetInt(){
 }
 
 void request_handler::HandleSignOn(vector<reply>& rep, client_ptr& this_client){
+    if(this_client){
+        log::print( "!! Client tried signing on, while already being signed on... weird. " + this_client->get_username());
+        return;
+    }
 	client new_client;
 	this_client = boost::make_shared<client>(new_client);
 	reply new_reply;
