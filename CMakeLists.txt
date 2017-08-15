@@ -1,43 +1,57 @@
 cmake_minimum_required (VERSION 2.6)
-project (OGMP)
+PROJECT (OGMP)
+
+OPTION(FORCE32 "Force a 32 bit built" OFF)
+set(BOOSTDIRECTORY "C:/boost/64/boost_1_63_0" CACHE STRING "Where to find boost")
 
 # Version
-set(OGMP_MAJOR_VERSION 0)
-set(OGMP_MINOR_VERSION 0)
-set(OGMP_PATCH_VERSION 3)
-set(OGMP_VERSION ${OGMP_MAJOR_VERSION}.${OGMP_MINOR_VERSION}.${OGMP_PATCH_VERSION})
+SET(OGMP_MAJOR_VERSION0)
+SET(OGMP_MINOR_VERSION 0)
+SET(OGMP_PATCH_VERSION 4)
+SET(OGMP_VERSION ${OGMP_MAJOR_VERSION}.${OGMP_MINOR_VERSION}.${OGMP_PATCH_VERSION})
 
 # Dependencies
-set(Boost_USE_STATIC_LIBS ON)
-set(Boost_USE_MULTITHREADED ON)
-set(Boost_USE_STATIC_RUNTIME OFF)
+SET(Boost_USE_STATIC_LIBS ON)
+SET(Boost_USE_MULTITHREADED ON)
+SET(Boost_USE_STATIC_RUNTIME OFF)
 
-# Boost location for compiling on Windows
-# set(BOOST_ROOT "E:/boost/64/boost_1_63_0") #64bit compiled
-# set(BOOST_ROOT "E:/boost/32/boost_1_63_0") #32bit compiled
+EXECUTE_PROCESS( COMMAND uname -m COMMAND tr -d '\n' OUTPUT_VARIABLE ARCHITECTURE )
 
-# Linux x86/x64/arm build
-# set(BOOST_ROOT "/home/gyrth/boost_1_63_0")
+# Boost location
+MESSAGE( STATUS "LCOATION " ${BOOSTDIRECTORY} )
+
+SET(BOOST_ROOT ${BOOSTDIRECTORY})
+
+IF(WIN32)
+	IF( ${ARCHITECTURE} STREQUAL x86_64 AND (NOT FORCE32) )
+		MESSAGE( STATUS "Compiling a 64 bit binary." )
+		set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -static -static-libgcc -static-libstdc++")
+		link_libraries(ws2_32 wsock32)
+	ELSEIF( ${ARCHITECTURE} STREQUAL x86 OR FORCE32 )
+		MESSAGE( STATUS "Compiling a 32 bit binary." )
+		SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -D _WIN32_WINNT=0x0501 -static -static-libgcc -static-libstdc++")
+		link_libraries(ws2_32 wsock32)
+	ENDIF()
+ELSEIF(LINUX)
+	IF( ${ARCHITECTURE} STREQUAL x86_64 AND (NOT FORCE32) )
+		MESSAGE( STATUS "Compiling a 64 bit binary." )
+		SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g -std=c++11 -m64 -static-libgcc -static-libstdc++")
+	ELSEIF( ${ARCHITECTURE} STREQUAL x86 )
+		MESSAGE( STATUS "Compiling a 32 bit binary." )
+		SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -m32 -static-libgcc -static-libstdc++")
+	ELSEIF( ${ARCHITECTURE} STREQUAL arm )
+		MESSAGE( STATUS "Compiling an ARM binary." )
+		SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -static-libgcc -static-libstdc++")
+	ENDIF()
+ELSEIF(APPLE)
+	IF(${CMAKE_SYSTEM_NAME} STREQUAL Darwin)
+		MESSAGE( STATUS "Compiling a binary." )
+		SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
+	ENDIF()
+ENDIF()
 
 find_package(Boost COMPONENTS REQUIRED program_options system)
 include_directories(${Boost_INCLUDE_DIRS})
-
-# Config
-# Linux build x86
-# set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -m32 -static-libgcc -static-libstdc++")
-# Linux build x64
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g -std=c++11 -m64 -static-libgcc -static-libstdc++")
-# Linux build arm
-# set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -static-libgcc -static-libstdc++")
-# Windows build
-# set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -D_WIN32_WINNT=0x0501 -static -static-libgcc -static-libstdc++")
-
-# Mac build
-if(APPLE)
-  if(${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
-  endif(${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
-endif(APPLE)
 
 include_directories(${PROJECT_BINARY_DIR})
 

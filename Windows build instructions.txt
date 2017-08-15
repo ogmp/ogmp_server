@@ -1,12 +1,13 @@
 # Compiling boost
 
 cd E:/boost/32/boost_1_63_0/tools/build
+path = %PATH%;C:\MinGW\bin
 bootstrap.bat
 bootstrap.bat mingw
-b2.exe install toolset=gcc --prefix=E:/boost/32/boost_1_63_0/b2_for_mingw
-cd E:/boost/32/boost_1_63_0
-set PATH=%PATH%;E:/boost/32/boost_1_63_0/b2_for_mingw\bin
-b2.exe toolset=gcc address-model=32 variant=debug,release link=static,shared threading=multi --with-filesystem --with-system --with-program_options
+b2.exe install toolset=gcc --prefix=C:/boost/64/boost_1_63_0/b2_for_mingw
+cd C:/boost/64/boost_1_63_0
+set PATH=%PATH%;C:/boost/64/boost_1_63_0/b2_for_mingw/bin
+b2.exe toolset=gcc address-model=64 variant=debug,release link=static,shared threading=multi --with-filesystem --with-system --with-program_options
 
 # Compiling OGMP
 
