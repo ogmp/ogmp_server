@@ -2,7 +2,7 @@ cmake_minimum_required (VERSION 2.6)
 PROJECT (OGMP)
 
 OPTION(FORCE32 "Force a 32 bit built" OFF)
-set(BOOSTDIRECTORY "C:/boost/64/boost_1_63_0" CACHE STRING "Where to find boost")
+set(BOOSTDIRECTORY "C:/boost/32/boost_1_63_0" CACHE STRING "Where to find boost")
 
 # Version
 SET(OGMP_MAJOR_VERSION0)
@@ -18,7 +18,7 @@ SET(Boost_USE_STATIC_RUNTIME OFF)
 EXECUTE_PROCESS( COMMAND uname -m COMMAND tr -d '\n' OUTPUT_VARIABLE ARCHITECTURE )
 
 # Boost location
-MESSAGE( STATUS "LCOATION " ${BOOSTDIRECTORY} )
+MESSAGE( STATUS "Using the boost location " ${BOOSTDIRECTORY} )
 
 SET(BOOST_ROOT ${BOOSTDIRECTORY})
 
