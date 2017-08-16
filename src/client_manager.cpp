@@ -61,14 +61,14 @@ void client_manager::add_to_inbox(reply& command, client_ptr initiator) {
 
 void client_manager::remove_client(client_ptr initiator) {
 	boost::unique_lock<boost::mutex> scoped_lock(clients_mutex_);
-
+	client_map remove_clients;
 	for(auto& item: clients_) {
 		if(initiator) {
-			if(item.second == initiator) {
-				clients_.erase(item.first);
-				continue;
-			}
+			remove_clients.insert(item);
 		}
+	}
+	for(auto& item: remove_clients) {
+		clients_.erase(item.first);
 	}
 }
 
