@@ -20,6 +20,10 @@ EXECUTE_PROCESS( COMMAND uname -m COMMAND tr -d '\n' OUTPUT_VARIABLE ARCHITECTUR
 # Boost location
 MESSAGE( STATUS "Using the boost location " ${BOOSTDIRECTORY} )
 
+IF(CMAKE_SYSTEM_NAME STREQUAL "Linux")
+    SET(LINUX TRUE)
+ENDIF()
+
 SET(BOOST_ROOT ${BOOSTDIRECTORY})
 
 IF(WIN32)
@@ -36,9 +40,9 @@ ELSEIF(LINUX)
 	IF( ${ARCHITECTURE} STREQUAL x86_64 AND (NOT FORCE32) )
 		MESSAGE( STATUS "Compiling a 64 bit binary." )
 		SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g -std=c++11 -m64 -static-libgcc -static-libstdc++")
-	ELSEIF( ${ARCHITECTURE} STREQUAL x86 )
+	ELSEIF( ${ARCHITECTURE} STREQUAL x86 OR FORCE32 )
 		MESSAGE( STATUS "Compiling a 32 bit binary." )
-		SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -m32 -static-libgcc -static-libstdc++")
+		SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g -std=c++11 -m32 -static-libgcc -static-libstdc++")
 	ELSEIF( ${ARCHITECTURE} STREQUAL arm )
 		MESSAGE( STATUS "Compiling an ARM binary." )
 		SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -static-libgcc -static-libstdc++")
