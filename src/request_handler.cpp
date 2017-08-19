@@ -148,18 +148,18 @@ void request_handler::HandleSignOn(vector<reply>& rep, client_ptr& this_client){
 	string levelname = GetString();
 	string levelpath = GetString();
 	string version = GetString();
-	
+
 	float posx = GetFloat();
 	float posy = GetFloat();
 	float posz = GetFloat();
-    
+
     int minimum_length = 5;
     if(levelname.length() < minimum_length || levelpath.length() < minimum_length){
         AddErrorMessage(rep, "The level you are trying to use is not valid!");
         log::print( "Client tried to connect with invalid values " + levelname + " " + levelpath);
         return;
     }
-	
+
 	//Check if the level is a default level and set the name from there.
 	for (const auto& map : config_->get_map_list()) {
 		if( levelpath == map.second.data() ){
@@ -167,7 +167,7 @@ void request_handler::HandleSignOn(vector<reply>& rep, client_ptr& this_client){
 			break;
 		}
 	}
-	
+
 	if(!config_->get_allow_other_maps()){
 		vector<pair<string, string>> allowed_maps = config_->get_map_list();
 		bool allowed = false;
@@ -185,10 +185,10 @@ void request_handler::HandleSignOn(vector<reply>& rep, client_ptr& this_client){
 
 	string character_dir = "turner";
 	double signon_time= difftime(time(0), start_);
-	
+
 	// Check if someone is already using that username.
 	client_map all_clients= client_manager_.get_clients();
-	
+
 	for(auto& item: all_clients) {
 		if((item.second)->get_username() == username) {
 			AddErrorMessage(rep, "Already a user with that username!");
@@ -196,7 +196,7 @@ void request_handler::HandleSignOn(vector<reply>& rep, client_ptr& this_client){
 			return;
 		}
 	}
-	
+
 	this_client->set_level_name(levelname);
 	this_client->set_level_path(levelpath);
 	this_client->set_username(username);
@@ -205,19 +205,19 @@ void request_handler::HandleSignOn(vector<reply>& rep, client_ptr& this_client){
 	this_client->set_posx(posx);
 	this_client->set_posy(posy);
 	this_client->set_posz(posz);
-	
+
 	// Set default teleport to the spawn position.
 	this_client->set_saved_posx(posx);
 	this_client->set_saved_posy(posy);
 	this_client->set_saved_posz(posz);
 
 	this_client->set_character(character);
-	//When the signon is successful 
+	//When the signon is successful
 	this_client->set_signed_on(true);
-	
+
 	// Add the client to the client list.
 	client_manager_.add_client(this_client);
-	
+
 	new_reply.add_to_buffers(SignOn);
 	new_reply.add_to_buffers(config_->get_update_refresh_rate());
 	new_reply.add_to_buffers(this_client->get_username());
@@ -225,12 +225,12 @@ void request_handler::HandleSignOn(vector<reply>& rep, client_ptr& this_client){
 	new_reply.add_to_buffers(this_client->get_team());
 	new_reply.add_to_buffers(this_client->get_character());
 	new_reply.add_to_buffers(this_client->get_level_name());
-	
+
 	rep.push_back(new_reply);
-	
+
 	// Now add join commands for all other clients in the same group.
 	client_map other_clients = client_manager_.get_clients(this_client);
-	
+
 	for(auto& item: other_clients) {
 		reply spawn_character_reply;
 
@@ -243,22 +243,22 @@ void request_handler::HandleSignOn(vector<reply>& rep, client_ptr& this_client){
 		spawn_character_reply.add_to_buffers((item.second)->get_posz());
 		rep.push_back(spawn_character_reply);
 	}
-	
+
 	// Send message command to other players.
 	reply message_reply;
-	
+
 	message_reply.add_to_buffers(Message);
 	message_reply.add_to_buffers((string)"server");
 	message_reply.add_to_buffers(this_client->get_username() + " has entered the room.");
 	message_reply.add_to_buffers(true);
 	client_manager_.add_to_inbox(message_reply, this_client);
-	
+
 	// Write the message to the logs.
 	log::print(this_client->get_username() + " has entered the room.");
 
 	// Send join command to other players.
 	reply spawn_character_reply;
-	
+
 	spawn_character_reply.add_to_buffers(SpawnCharacter);
 	spawn_character_reply.add_to_buffers(this_client->get_username());
 	spawn_character_reply.add_to_buffers(this_client->get_team());
@@ -271,58 +271,102 @@ void request_handler::HandleSignOn(vector<reply>& rep, client_ptr& this_client){
 }
 
 void request_handler::HandleUpdate(vector<reply>& rep, client_ptr& this_client){
-	// Update player states.
+    float new_blood_damage;
+	float new_blood_health;
+	float new_block_health;
+	float new_temp_health;
+	float new_permanent_health;
+    float new_blood_amount;
+	int new_knocked_out;
 
-	this_client->set_posx(GetFloat());
-	this_client->set_posy(GetFloat());
-	this_client->set_posz(GetFloat());
-	this_client->set_dirx(GetFloat());
-	this_client->set_dirz(GetFloat());
+    while(data_index < strlen(data)){
+        player_variable_type variable_type = (player_variable_type)data[data_index];
+        data_index++;
+        switch (variable_type)
+        {
+            case crouch:
+                this_client->set_crouch(GetBool());
+                break;
+            case jump:
+                this_client->set_jump(GetBool());
+                break;
+            case attack:
+                this_client->set_attack(GetBool());
+                break;
+            case grab:
+                this_client->set_grab(GetBool());
+                break;
+            case item:
+                this_client->set_item(GetBool());
+                break;
+            case drop:
+                this_client->set_drop(GetBool());
+                break;
+            case blood_damage:
+                this_client->set_blood_damage(GetFloat());
+                break;
+            case blood_health:
+                this_client->set_blood_health(GetFloat());
+                break;
+            case block_health:
+                this_client->set_block_health(GetFloat());
+                break;
+            case temp_health:
+                this_client->set_temp_health(GetFloat());
+                break;
+            case permanent_health:
+                //new_permanent_health = GetFloat();
+                this_client->set_permanent_health(GetFloat());
+                break;
+            case blood_amount:
+                //new_blood_amount = GetFloat();
+                this_client->set_blood_amount(GetFloat());
+                break;
+            case recovery_time:
+                this_client->set_recovery_time(GetFloat());
+                break;
+            case roll_recovery_time:
+                this_client->set_roll_recovery_time(GetFloat());
+                break;
+            case knocked_out:
+                //new_knocked_out = GetInt();
+                this_client->set_knocked_out(GetInt());
+                break;
+            case ragdoll_type:
+                this_client->set_ragdoll_type(GetInt());
+                break;
+            case blood_delay:
+                this_client->set_blood_delay(GetInt());
+                break;
+            case state:
+                this_client->set_state(GetInt());
+                break;
+            case cut_throat:
+                this_client->set_cut_throat(GetBool());
+                break;
+            case position_x:
+                this_client->set_posx(GetFloat());
+                break;
+            case position_y:
+                this_client->set_posy(GetFloat());
+                break;
+            case position_z:
+                this_client->set_posz(GetFloat());
+                break;
+            case direction_x:
+                this_client->set_dirx(GetFloat());
+                break;
+            case direction_z:
+                this_client->set_dirz(GetFloat());
+                break;
+            default:
+                break;
+        }
+    }
 
-	this_client->set_crouch(GetBool());
-	this_client->set_jump(GetBool());
-	this_client->set_attack(GetBool());
-	this_client->set_grab(GetBool());
-	this_client->set_item(GetBool());
-	this_client->set_drop(GetBool());
-	this_client->set_roll(GetBool());
-	this_client->set_jumpoffwall(GetBool());
-	this_client->set_activeblock(GetBool());
-	
-	float blood_damage = GetFloat();
-	float blood_health = GetFloat();
-	float block_health = GetFloat();
-	float temp_health = GetFloat();
-	float permanent_health = GetFloat();
-	int knocked_out = GetInt();
-	float blood_amount = GetFloat();
-	
-	float recovery_time = GetFloat();
-	float roll_recovery_time = GetFloat();
-	this_client->set_ragdoll_type(GetInt());
-	int blood_delay = GetInt();
-	bool cut_throat = GetBool();
-	int state = GetInt();
-	
-	if((this_client->get_time_of_death() < 1) || (difftime(time(0), this_client->get_time_of_death()) > 10)) {
-		// Do not allow this_clients to increase some parts of their health.
-		if(blood_health < this_client->get_blood_health()) {
-			this_client->set_blood_health(blood_health);
-		}
-		if(permanent_health < this_client->get_permanent_health()) {
-			this_client->set_permanent_health(permanent_health);
-		}
-		if(knocked_out > this_client->get_knocked_out()) {
-			this_client->set_knocked_out(knocked_out);
-		}
-		this_client->set_blood_damage(blood_damage);
-		this_client->set_block_health(block_health);
-		this_client->set_temp_health(temp_health);
-	}
-
-	this_client->set_blood_delay(blood_delay);
-	this_client->set_cut_throat(cut_throat);
-	this_client->set_state(state);
+	// this_client->set_roll(GetBool());
+	// this_client->set_jumpoffwall(GetBool());
+	// this_client->set_activeblock(GetBool());
 
 	// Add commands from queue if available.
 	while(this_client->get_number_of_inbox_messages() != 0) {
@@ -342,7 +386,7 @@ void request_handler::HandleUpdate(vector<reply>& rep, client_ptr& this_client){
 
 			// Send message to all players in the group.
 			reply died_message;
-			
+
 			died_message.add_to_buffers(Message);
 			died_message.add_to_buffers((string)"server");
 			died_message.add_to_buffers(this_client->get_username() + " has died.");
@@ -372,10 +416,10 @@ void request_handler::HandleUpdate(vector<reply>& rep, client_ptr& this_client){
 		this_client->set_death_changed(false);
 		this_client->set_remove_blood(false);
 	}
-	
+
 	// Send health back to player.
 	reply updateself_reply;
-	
+
 	updateself_reply.add_to_buffers(UpdateSelf);
 	updateself_reply.add_to_buffers(this_client->get_blood_damage());
 	updateself_reply.add_to_buffers(this_client->get_blood_health());
@@ -397,7 +441,7 @@ void request_handler::HandleUpdate(vector<reply>& rep, client_ptr& this_client){
 
 	for(auto& item: other_clients) {
 		reply update_reply;
-		
+
 		update_reply.add_to_buffers(UpdateCharacter);
 		update_reply.add_to_buffers((item.second)->get_username());
 		update_reply.add_to_buffers((item.second)->get_posx());
@@ -442,7 +486,7 @@ void request_handler::HandleChatMessage(vector<reply>& rep, client_ptr& this_cli
 	chat_message.add_to_buffers(this_client->get_username());
 	chat_message.add_to_buffers(chat_message_content);
 	chat_message.add_to_buffers(false);
-	
+
 	log::print(this_client->get_username() + ": " + chat_message_content);
 
 	client_manager_.add_to_inbox(chat_message, this_client);
@@ -459,7 +503,7 @@ void request_handler::HandleSavePositionMessage(client_ptr& this_client){
 	this_client->set_saved_posx(this_client->get_posx());
 	this_client->set_saved_posy(this_client->get_posy());
 	this_client->set_saved_posz(this_client->get_posz());
-	
+
 }
 
 void request_handler::HandleLoadPositionMessage(vector<reply>& rep, client_ptr& this_client){
@@ -576,7 +620,7 @@ void request_handler::client_disconnected(client_ptr& this_client) {
 	}
 	// Send disconnect message to other players.
 	reply disconnect_message;
-	
+
 	disconnect_message.add_to_buffers(Message);
 	disconnect_message.add_to_buffers((string)"server");
 	disconnect_message.add_to_buffers(this_client->get_username() + " has left the room.");
@@ -586,7 +630,7 @@ void request_handler::client_disconnected(client_ptr& this_client) {
 
 	// Send remove character message to other players.
 	reply remove_character;
-	
+
 	remove_character.add_to_buffers(RemoveCharacter);
 	remove_character.add_to_buffers(this_client->get_username());
 	client_manager_.add_to_inbox(remove_character, this_client);
@@ -594,7 +638,7 @@ void request_handler::client_disconnected(client_ptr& this_client) {
 }
 
 void request_handler::prepare_reply(vector<reply>& rep, string extension) {
-	
+
 }
 
 string request_handler::encode_output(string_map output) {
