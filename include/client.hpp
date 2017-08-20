@@ -18,6 +18,9 @@ class client {
 	public:
 		client();
 
+		void set_all_variables_old();
+		bool is_variable_new(int index);
+
 		void set_uid(string uid);
 		void set_level_name(string level);
 		void set_level_path(string level);
@@ -125,6 +128,7 @@ class client {
 		int knocked_out_, ragdoll_type_, blood_delay_, state_;
 		string_map_vector commands_;
 		vector<reply> inbox_;
+		array<bool, 25> variable_states;
 };
 
 typedef boost::shared_ptr<client> client_ptr;

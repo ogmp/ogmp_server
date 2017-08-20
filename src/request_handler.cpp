@@ -153,7 +153,7 @@ void request_handler::HandleSignOn(vector<reply>& rep, client_ptr& this_client){
 	float posy = GetFloat();
 	float posz = GetFloat();
 
-    int minimum_length = 5;
+    int minimum_length = 4;
     if(levelname.length() < minimum_length || levelpath.length() < minimum_length){
         AddErrorMessage(rep, "The level you are trying to use is not valid!");
         log::print( "Client tried to connect with invalid values " + levelname + " " + levelpath);
@@ -363,7 +363,7 @@ void request_handler::HandleUpdate(vector<reply>& rep, client_ptr& this_client){
                 break;
         }
     }
-
+    this_client->set_all_variables_old();
 	// this_client->set_roll(GetBool());
 	// this_client->set_jumpoffwall(GetBool());
 	// this_client->set_activeblock(GetBool());
@@ -409,32 +409,17 @@ void request_handler::HandleUpdate(vector<reply>& rep, client_ptr& this_client){
 				this_client->set_recovery_time(0.0f);
 				this_client->set_roll_recovery_time(0.0f);
 				this_client->set_remove_blood(true);
+
+                cout << "settings removeblood is " << remove_blood << " " << this_client->is_variable_new(remove_blood) << endl;
 				this_client->set_cut_throat(false);
 			}
 		}
 	} else {
 		this_client->set_death_changed(false);
-		this_client->set_remove_blood(false);
+		// this_client->set_remove_blood(false);
 	}
 
-	// Send health back to player.
-	reply updateself_reply;
-
-	updateself_reply.add_to_buffers(UpdateSelf);
-	updateself_reply.add_to_buffers(this_client->get_blood_damage());
-	updateself_reply.add_to_buffers(this_client->get_blood_health());
-	updateself_reply.add_to_buffers(this_client->get_block_health());
-	updateself_reply.add_to_buffers(this_client->get_temp_health());
-	updateself_reply.add_to_buffers(this_client->get_permanent_health());
-	updateself_reply.add_to_buffers(this_client->get_blood_amount());
-	updateself_reply.add_to_buffers(this_client->get_recovery_time());
-	updateself_reply.add_to_buffers(this_client->get_roll_recovery_time());
-	updateself_reply.add_to_buffers(this_client->get_ragdoll_type());
-	updateself_reply.add_to_buffers(this_client->get_remove_blood());
-	updateself_reply.add_to_buffers(this_client->get_cut_throat());
-
-	//TODO maybe just send this when needed.
-	rep.push_back(updateself_reply);
+	AddUpdateSelf(rep, this_client);
 
 	// Get states of the other clients.
 	client_map other_clients = client_manager_.get_clients(this_client);
@@ -475,6 +460,60 @@ void request_handler::HandleUpdate(vector<reply>& rep, client_ptr& this_client){
 
 		rep.push_back(update_reply);
 	}
+}
+
+void request_handler::AddUpdateSelf(vector<reply>& rep, client_ptr& this_client){
+    // Send health back to player.
+	reply updateself_reply;
+
+	updateself_reply.add_to_buffers(UpdateSelf);
+    if(this_client->is_variable_new(blood_damage)){
+        updateself_reply.add_to_buffers(blood_damage);
+        updateself_reply.add_to_buffers(this_client->get_blood_damage());
+    }
+    if(this_client->is_variable_new(blood_health)){
+        updateself_reply.add_to_buffers(blood_health);
+        updateself_reply.add_to_buffers(this_client->get_blood_health());
+    }
+    if(this_client->is_variable_new(block_health)){
+        updateself_reply.add_to_buffers(block_health);
+        updateself_reply.add_to_buffers(this_client->get_block_health());
+    }
+    if(this_client->is_variable_new(temp_health)){
+        updateself_reply.add_to_buffers(temp_health);
+        updateself_reply.add_to_buffers(this_client->get_temp_health());
+    }
+    if(this_client->is_variable_new(permanent_health)){
+        updateself_reply.add_to_buffers(permanent_health);
+        updateself_reply.add_to_buffers(this_client->get_permanent_health());
+    }
+    if(this_client->is_variable_new(blood_amount)){
+        updateself_reply.add_to_buffers(blood_amount);
+        updateself_reply.add_to_buffers(this_client->get_blood_amount());
+    }
+    if(this_client->is_variable_new(recovery_time)){
+        updateself_reply.add_to_buffers(recovery_time);
+        updateself_reply.add_to_buffers(this_client->get_recovery_time());
+    }
+    if(this_client->is_variable_new(roll_recovery_time)){
+        updateself_reply.add_to_buffers(roll_recovery_time);
+        updateself_reply.add_to_buffers(this_client->get_roll_recovery_time());
+    }
+    if(this_client->is_variable_new(ragdoll_type)){
+        updateself_reply.add_to_buffers(ragdoll_type);
+        updateself_reply.add_to_buffers(this_client->get_ragdoll_type());
+    }
+    cout << "Removeblood is " << this_client->is_variable_new(remove_blood) << endl;
+    if(this_client->is_variable_new(remove_blood)){
+        updateself_reply.add_to_buffers(remove_blood);
+        updateself_reply.add_to_buffers(this_client->get_remove_blood());
+    }
+    if(this_client->is_variable_new(cut_throat)){
+        updateself_reply.add_to_buffers(cut_throat);
+        updateself_reply.add_to_buffers(this_client->get_cut_throat());
+    }
+	//TODO maybe just send this when needed.
+	rep.push_back(updateself_reply);
 }
 
 void request_handler::HandleChatMessage(vector<reply>& rep, client_ptr& this_client){

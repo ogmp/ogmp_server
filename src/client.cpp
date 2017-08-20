@@ -15,178 +15,216 @@ blood_damage_(0.0f), blood_health_(1.0f), block_health_(1.0f), temp_health_(1.0f
 permanent_health_(1.0f), knocked_out_(_awake), blood_amount_(10.0f),
 recovery_time_(0.0f), roll_recovery_time_(0.0f), ragdoll_type_(0), time_of_death_(0),
 remove_blood_(false), blood_delay_(0), cut_throat_(false), state_(0), has_signed_on_(false) {
+	variable_states.fill(false);
 }
 
-void client::set_uid(string uid) {
-	uid_ = uid;
+void client::set_all_variables_old(){
+	// for(size_t i = 0; i < variable_states.size(); i++){
+	// 	variable_states[i] = false;
+	// }
+	variable_states.fill(false);
 }
 
-void client::set_level_path(string level_path) {
-	level_path_ = level_path;
+bool client::is_variable_new(int index){
+	return variable_states[index];
 }
 
-void client::set_level_name(string level_name) {
-	level_name_ = level_name;
+void client::set_uid(string _uid) {
+	uid_ = _uid;
 }
 
-void client::set_username(string username) {
-	username_ = username;
+void client::set_level_path(string _level_path) {
+	level_path_ = _level_path;
 }
 
-void client::set_team(string team) {
-	team_ = team;
+void client::set_level_name(string _level_name) {
+	level_name_ = _level_name;
 }
 
-void client::add_command(string_map command) {
-	commands_.push_back(command);
+void client::set_username(string _username) {
+	username_ = _username;
 }
 
-void client::add_to_inbox(reply& command) {
-	inbox_.push_back(command);
+void client::set_team(string _team) {
+	team_ = _team;
 }
 
-void client::set_last_updated(double current_seconds) {
-	last_updated_ = current_seconds;
+void client::add_command(string_map _command) {
+	commands_.push_back(_command);
 }
 
-void client::set_character(string character) {
-	character_ = character;
+void client::add_to_inbox(reply& _command) {
+	inbox_.push_back(_command);
 }
 
-void client::set_posx(float posx) {
-	posx_ = posx;
+void client::set_last_updated(double _current_seconds) {
+	last_updated_ = _current_seconds;
 }
 
-void client::set_posy(float posy) {
-	posy_ = posy;
+void client::set_character(string _character) {
+	character_ = _character;
 }
 
-void client::set_posz(float posz) {
-	posz_ = posz;
+void client::set_posx(float _posx) {
+	variable_states[position_x] = true;
+	posx_ = _posx;
 }
 
-void client::set_saved_posx(float posx) {
-	saved_posx_ = posx;
+void client::set_posy(float _posy) {
+	variable_states[position_y] = true;
+	posy_ = _posy;
 }
 
-void client::set_saved_posy(float posy) {
-	saved_posy_ = posy;
+void client::set_posz(float _posz) {
+	variable_states[position_z] = true;
+	posz_ = _posz;
 }
 
-void client::set_saved_posz(float posz) {
-	saved_posz_ = posz;
+void client::set_saved_posx(float _posx) {
+	saved_posx_ = _posx;
 }
 
-void client::set_crouch(bool crouch) {
-	iscrouching_ = crouch;
+void client::set_saved_posy(float _posy) {
+	saved_posy_ = _posy;
 }
 
-void client::set_jump(bool jump) {
-	isjumping_ = jump;
+void client::set_saved_posz(float _posz) {
+	saved_posz_ = _posz;
 }
 
-void client::set_attack(bool attack) {
-	isattacking_ = attack;
+void client::set_crouch(bool _crouch) {
+	variable_states[crouch] = true;
+	iscrouching_ = _crouch;
 }
 
-void client::set_grab(bool grab) {
-	isgrabbing_ = grab;
+void client::set_jump(bool _jump) {
+	variable_states[jump] = true;
+	isjumping_ = _jump;
 }
 
-void client::set_item(bool item) {
-	isusingitem_ = item;
+void client::set_attack(bool _attack) {
+	variable_states[attack] = true;
+	isattacking_ = _attack;
 }
 
-void client::set_drop(bool drop) {
-	isdropping_ = drop;
+void client::set_grab(bool _grab) {
+	variable_states[grab] = true;
+	isgrabbing_ = _grab;
 }
 
-void client::set_roll(bool roll) {
-	isrolling_ = roll;
+void client::set_item(bool _item) {
+	variable_states[item] = true;
+	isusingitem_ = _item;
 }
 
-void client::set_jumpoffwall(bool offwall) {
-	isjumpingoffwall_ = offwall;
+void client::set_drop(bool _drop) {
+	variable_states[drop] = true;
+	isdropping_ = _drop;
 }
 
-void client::set_activeblock(bool activeblock) {
-	isactiveblocking_ = activeblock;
+void client::set_roll(bool _roll) {
+	isrolling_ = _roll;
 }
 
-void client::set_blood_damage(float blood_damage) {
-	blood_damage_ = blood_damage;
+void client::set_jumpoffwall(bool _offwall) {
+	isjumpingoffwall_ = _offwall;
 }
 
-void client::set_blood_health(float blood_health) {
-	blood_health_ = blood_health;
+void client::set_activeblock(bool _activeblock) {
+	isactiveblocking_ = _activeblock;
 }
 
-void client::set_block_health(float block_health) {
-	block_health_ = block_health;
+void client::set_blood_damage(float _blood_damage) {
+	variable_states[blood_damage] = true;
+	blood_damage_ = _blood_damage;
 }
 
-void client::set_temp_health(float temp_health) {
-	temp_health_ = temp_health;
+void client::set_blood_health(float _blood_health) {
+	variable_states[blood_health] = true;
+	blood_health_ = _blood_health;
 }
 
-void client::set_permanent_health(float permanent_health) {
-	permanent_health_ = permanent_health;
+void client::set_block_health(float _block_health) {
+	variable_states[block_health] = true;
+	block_health_ = _block_health;
 }
 
-void client::set_knocked_out(int knocked_out) {
-	knocked_out_ = knocked_out;
+void client::set_temp_health(float _temp_health) {
+	variable_states[temp_health] = true;
+	temp_health_ = _temp_health;
 }
 
-void client::set_death_changed(bool death_changed) {
-	death_changed_ = death_changed;
+void client::set_permanent_health(float _permanent_health) {
+	variable_states[permanent_health] = true;
+	permanent_health_ = _permanent_health;
 }
 
-void client::set_signed_on(bool signed_on){
-	has_signed_on_ = signed_on;
+void client::set_knocked_out(int _knocked_out) {
+	variable_states[knocked_out] = true;
+	knocked_out_ = _knocked_out;
 }
 
-void client::set_time_of_death(double current_seconds) {
-	time_of_death_ = current_seconds;
+void client::set_death_changed(bool _death_changed) {
+	death_changed_ = _death_changed;
 }
 
-void client::set_blood_amount(float blood_amount) {
-	blood_amount_ = blood_amount;
+void client::set_signed_on(bool _signed_on){
+	has_signed_on_ = _signed_on;
 }
 
-void client::set_recovery_time(float recovery_time) {
-	recovery_time_ = recovery_time;
+void client::set_time_of_death(double _current_seconds) {
+	time_of_death_ = _current_seconds;
 }
 
-void client::set_roll_recovery_time(float roll_recovery_time) {
-	roll_recovery_time_ = roll_recovery_time;
+void client::set_blood_amount(float _blood_amount) {
+	variable_states[blood_amount] = true;
+	blood_amount_ = _blood_amount;
 }
 
-void client::set_ragdoll_type(int ragdoll_type) {
-	ragdoll_type_ = ragdoll_type;
+void client::set_recovery_time(float _recovery_time) {
+	variable_states[recovery_time] = true;
+	recovery_time_ = _recovery_time;
 }
 
-void client::set_remove_blood(bool remove_blood) {
-	remove_blood_ = remove_blood;
+void client::set_roll_recovery_time(float _roll_recovery_time) {
+	variable_states[roll_recovery_time] = true;
+	roll_recovery_time_ = _roll_recovery_time;
 }
 
-void client::set_blood_delay(int blood_delay) {
-	blood_delay_ = blood_delay;
+void client::set_ragdoll_type(int _ragdoll_type) {
+	variable_states[ragdoll_type] = true;
+	ragdoll_type_ = _ragdoll_type;
 }
 
-void client::set_cut_throat(bool cut_throat) {
-	cut_throat_ = cut_throat;
+void client::set_remove_blood(bool _remove_blood) {
+	variable_states[remove_blood] = true;
+	cout << variable_states[remove_blood] << endl;
+	remove_blood_ = _remove_blood;
 }
 
-void client::set_state(int state) {
-	state_ = state;
+void client::set_blood_delay(int _blood_delay) {
+	variable_states[blood_delay] = true;
+	blood_delay_ = _blood_delay;
 }
 
-void client::set_dirx(float dirx) {
-	dirx_ = dirx;
+void client::set_cut_throat(bool _cut_throat) {
+	variable_states[cut_throat] = true;
+	cut_throat_ = _cut_throat;
 }
 
-void client::set_dirz(float dirz) {
-	dirz_ = dirz;
+void client::set_state(int _state) {
+	variable_states[state] = true;
+	state_ = _state;
+}
+
+void client::set_dirx(float _dirx) {
+	variable_states[direction_x] = true;
+	dirx_ = _dirx;
+}
+
+void client::set_dirz(float _dirz) {
+	variable_states[direction_z] = true;
+	dirz_ = _dirz;
 }
 
 string client::get_uid() {
