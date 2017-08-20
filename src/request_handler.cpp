@@ -279,6 +279,8 @@ void request_handler::HandleUpdate(vector<reply>& rep, client_ptr& this_client){
     float new_blood_amount;
 	int new_knocked_out;
 
+    this_client->set_all_variables_old();
+
     while(data_index < strlen(data)){
         player_variable_type variable_type = (player_variable_type)data[data_index];
         data_index++;
@@ -363,7 +365,6 @@ void request_handler::HandleUpdate(vector<reply>& rep, client_ptr& this_client){
                 break;
         }
     }
-    this_client->set_all_variables_old();
 	// this_client->set_roll(GetBool());
 	// this_client->set_jumpoffwall(GetBool());
 	// this_client->set_activeblock(GetBool());
@@ -428,92 +429,138 @@ void request_handler::HandleUpdate(vector<reply>& rep, client_ptr& this_client){
 		reply update_reply;
 
 		update_reply.add_to_buffers(UpdateCharacter);
-		update_reply.add_to_buffers((item.second)->get_username());
-		update_reply.add_to_buffers((item.second)->get_posx());
-		update_reply.add_to_buffers((item.second)->get_posy());
-		update_reply.add_to_buffers((item.second)->get_posz());
-		update_reply.add_to_buffers((item.second)->get_dirx());
-		update_reply.add_to_buffers((item.second)->get_dirz());
-		update_reply.add_to_buffers((item.second)->get_crouch());
-		update_reply.add_to_buffers((item.second)->get_jump());
-		update_reply.add_to_buffers((item.second)->get_attack());
-		update_reply.add_to_buffers((item.second)->get_grab());
-		update_reply.add_to_buffers((item.second)->get_item());
-		update_reply.add_to_buffers((item.second)->get_drop());
-		update_reply.add_to_buffers((item.second)->get_roll());
-		update_reply.add_to_buffers((item.second)->get_jumpoffwall());
-		update_reply.add_to_buffers((item.second)->get_activeblock());
-		update_reply.add_to_buffers((item.second)->get_blood_damage());
-		update_reply.add_to_buffers((item.second)->get_blood_health());
-		update_reply.add_to_buffers((item.second)->get_block_health());
-		update_reply.add_to_buffers((item.second)->get_temp_health());
-		update_reply.add_to_buffers((item.second)->get_permanent_health());
-		update_reply.add_to_buffers((item.second)->get_knocked_out());
-		update_reply.add_to_buffers((item.second)->get_blood_amount());
-		update_reply.add_to_buffers((item.second)->get_recovery_time());
-		update_reply.add_to_buffers((item.second)->get_roll_recovery_time());
-		update_reply.add_to_buffers((item.second)->get_ragdoll_type());
-		update_reply.add_to_buffers((item.second)->get_remove_blood());
-		update_reply.add_to_buffers((item.second)->get_blood_delay());
-		update_reply.add_to_buffers((item.second)->get_cut_throat());
-		update_reply.add_to_buffers((item.second)->get_state());
+        update_reply.add_to_buffers((item.second)->get_username());
+        AddChangedVariables(update_reply, item.second);
+		// update_reply.add_to_buffers((item.second)->get_username());
+		// update_reply.add_to_buffers((item.second)->get_posx());
+		// update_reply.add_to_buffers((item.second)->get_posy());
+		// update_reply.add_to_buffers((item.second)->get_posz());
+		// update_reply.add_to_buffers((item.second)->get_dirx());
+		// update_reply.add_to_buffers((item.second)->get_dirz());
+		// update_reply.add_to_buffers((item.second)->get_crouch());
+		// update_reply.add_to_buffers((item.second)->get_jump());
+		// update_reply.add_to_buffers((item.second)->get_attack());
+		// update_reply.add_to_buffers((item.second)->get_grab());
+		// update_reply.add_to_buffers((item.second)->get_item());
+		// update_reply.add_to_buffers((item.second)->get_drop());
+		// update_reply.add_to_buffers((item.second)->get_roll());
+		// update_reply.add_to_buffers((item.second)->get_jumpoffwall());
+		// update_reply.add_to_buffers((item.second)->get_activeblock());
+		// update_reply.add_to_buffers((item.second)->get_blood_damage());
+		// update_reply.add_to_buffers((item.second)->get_blood_health());
+		// update_reply.add_to_buffers((item.second)->get_block_health());
+		// update_reply.add_to_buffers((item.second)->get_temp_health());
+		// update_reply.add_to_buffers((item.second)->get_permanent_health());
+		// update_reply.add_to_buffers((item.second)->get_knocked_out());
+		// update_reply.add_to_buffers((item.second)->get_blood_amount());
+		// update_reply.add_to_buffers((item.second)->get_recovery_time());
+		// update_reply.add_to_buffers((item.second)->get_roll_recovery_time());
+		// update_reply.add_to_buffers((item.second)->get_ragdoll_type());
+		// update_reply.add_to_buffers((item.second)->get_remove_blood());
+		// update_reply.add_to_buffers((item.second)->get_blood_delay());
+		// update_reply.add_to_buffers((item.second)->get_cut_throat());
+		// update_reply.add_to_buffers((item.second)->get_state());
 
 		rep.push_back(update_reply);
 	}
 }
 
 void request_handler::AddUpdateSelf(vector<reply>& rep, client_ptr& this_client){
-    // Send health back to player.
-	reply updateself_reply;
+    reply update_character;
+    update_character.add_to_buffers(UpdateSelf);
+    AddChangedVariables(update_character, this_client);
+    rep.push_back(update_character);
+}
 
-	updateself_reply.add_to_buffers(UpdateSelf);
+void request_handler::AddChangedVariables(reply& update_character, client_ptr& this_client){
     if(this_client->is_variable_new(blood_damage)){
-        updateself_reply.add_to_buffers(blood_damage);
-        updateself_reply.add_to_buffers(this_client->get_blood_damage());
+        update_character.add_to_buffers(blood_damage);
+        update_character.add_to_buffers(this_client->get_blood_damage());
     }
     if(this_client->is_variable_new(blood_health)){
-        updateself_reply.add_to_buffers(blood_health);
-        updateself_reply.add_to_buffers(this_client->get_blood_health());
+        update_character.add_to_buffers(blood_health);
+        update_character.add_to_buffers(this_client->get_blood_health());
     }
     if(this_client->is_variable_new(block_health)){
-        updateself_reply.add_to_buffers(block_health);
-        updateself_reply.add_to_buffers(this_client->get_block_health());
+        update_character.add_to_buffers(block_health);
+        update_character.add_to_buffers(this_client->get_block_health());
     }
     if(this_client->is_variable_new(temp_health)){
-        updateself_reply.add_to_buffers(temp_health);
-        updateself_reply.add_to_buffers(this_client->get_temp_health());
+        update_character.add_to_buffers(temp_health);
+        update_character.add_to_buffers(this_client->get_temp_health());
     }
     if(this_client->is_variable_new(permanent_health)){
-        updateself_reply.add_to_buffers(permanent_health);
-        updateself_reply.add_to_buffers(this_client->get_permanent_health());
+        update_character.add_to_buffers(permanent_health);
+        update_character.add_to_buffers(this_client->get_permanent_health());
     }
     if(this_client->is_variable_new(blood_amount)){
-        updateself_reply.add_to_buffers(blood_amount);
-        updateself_reply.add_to_buffers(this_client->get_blood_amount());
+        update_character.add_to_buffers(blood_amount);
+        update_character.add_to_buffers(this_client->get_blood_amount());
     }
     if(this_client->is_variable_new(recovery_time)){
-        updateself_reply.add_to_buffers(recovery_time);
-        updateself_reply.add_to_buffers(this_client->get_recovery_time());
+        update_character.add_to_buffers(recovery_time);
+        update_character.add_to_buffers(this_client->get_recovery_time());
     }
     if(this_client->is_variable_new(roll_recovery_time)){
-        updateself_reply.add_to_buffers(roll_recovery_time);
-        updateself_reply.add_to_buffers(this_client->get_roll_recovery_time());
+        update_character.add_to_buffers(roll_recovery_time);
+        update_character.add_to_buffers(this_client->get_roll_recovery_time());
     }
     if(this_client->is_variable_new(ragdoll_type)){
-        updateself_reply.add_to_buffers(ragdoll_type);
-        updateself_reply.add_to_buffers(this_client->get_ragdoll_type());
+        update_character.add_to_buffers(ragdoll_type);
+        update_character.add_to_buffers(this_client->get_ragdoll_type());
     }
-    cout << "Removeblood is " << this_client->is_variable_new(remove_blood) << endl;
     if(this_client->is_variable_new(remove_blood)){
-        updateself_reply.add_to_buffers(remove_blood);
-        updateself_reply.add_to_buffers(this_client->get_remove_blood());
+        update_character.add_to_buffers(remove_blood);
+        update_character.add_to_buffers(this_client->get_remove_blood());
     }
     if(this_client->is_variable_new(cut_throat)){
-        updateself_reply.add_to_buffers(cut_throat);
-        updateself_reply.add_to_buffers(this_client->get_cut_throat());
+        update_character.add_to_buffers(cut_throat);
+        update_character.add_to_buffers(this_client->get_cut_throat());
     }
-	//TODO maybe just send this when needed.
-	rep.push_back(updateself_reply);
+    if(this_client->is_variable_new(crouch)){
+        update_character.add_to_buffers(crouch);
+        update_character.add_to_buffers(this_client->get_crouch());
+    }
+    if(this_client->is_variable_new(jump)){
+        update_character.add_to_buffers(jump);
+        update_character.add_to_buffers(this_client->get_jump());
+    }
+    if(this_client->is_variable_new(attack)){
+        update_character.add_to_buffers(attack);
+        update_character.add_to_buffers(this_client->get_attack());
+    }
+    if(this_client->is_variable_new(grab)){
+        update_character.add_to_buffers(grab);
+        update_character.add_to_buffers(this_client->get_grab());
+    }
+    if(this_client->is_variable_new(item)){
+        update_character.add_to_buffers(item);
+        update_character.add_to_buffers(this_client->get_item());
+    }
+    if(this_client->is_variable_new(drop)){
+        update_character.add_to_buffers(drop);
+        update_character.add_to_buffers(this_client->get_drop());
+    }
+    if(this_client->is_variable_new(position_x)){
+        update_character.add_to_buffers(position_x);
+        update_character.add_to_buffers(this_client->get_posx());
+    }
+    if(this_client->is_variable_new(position_y)){
+        update_character.add_to_buffers(position_y);
+        update_character.add_to_buffers(this_client->get_posy());
+    }
+    if(this_client->is_variable_new(position_z)){
+        update_character.add_to_buffers(position_z);
+        update_character.add_to_buffers(this_client->get_posz());
+    }
+    if(this_client->is_variable_new(direction_x)){
+        update_character.add_to_buffers(direction_x);
+        update_character.add_to_buffers(this_client->get_dirx());
+    }
+    if(this_client->is_variable_new(direction_z)){
+        update_character.add_to_buffers(direction_z);
+        update_character.add_to_buffers(this_client->get_dirz());
+    }
 }
 
 void request_handler::HandleChatMessage(vector<reply>& rep, client_ptr& this_client){

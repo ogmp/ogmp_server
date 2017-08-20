@@ -88,7 +88,8 @@ class request_handler {
 		float GetFloat();
 		bool GetBool();
 		int GetInt();
-		void AddUpdateSelf(vector<reply>& rep, client_ptr& this_client);		
+		void AddUpdateSelf(vector<reply>& rep, client_ptr& this_client);
+		void AddChangedVariables(reply& rep, client_ptr& this_client);
 };
 
 } // namespace server
