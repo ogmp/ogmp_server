@@ -20,7 +20,7 @@ void connection::start() {
 
 void connection::stop() {
     request_handler_.client_disconnected(this_client_);
-	socket_.close();    
+	socket_.close();
 }
 
 void connection::client_timed_out(const boost::system::error_code& ec){
@@ -35,10 +35,10 @@ void connection::client_timed_out(const boost::system::error_code& ec){
 
 void connection::do_read() {
 	auto self(shared_from_this());
-    
+
     m_timer->expires_from_now(boost::posix_time::seconds(remove_delay));
     m_timer->async_wait(boost::bind(&connection::client_timed_out, this, _1));
-    
+
 	socket_.async_read_some(boost::asio::buffer(buffer_),
 		[this, self](boost::system::error_code ec, std::size_t bytes_transferred) {
             if(!ec) {

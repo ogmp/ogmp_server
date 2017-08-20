@@ -75,7 +75,7 @@ class request_handler {
 		bool url_decode(const string& in, string& out);
 		void prepare_reply(vector<reply>& rep, string extension = "");
 		void HandleSignOn(vector<reply>& rep, client_ptr& this_client);
-		void HandleUpdate(vector<reply>& rep, client_ptr& this_client);
+		void HandleUpdate(vector<reply>& rep, client_ptr& this_client, size_t size);
 		void HandleChatMessage(vector<reply>& rep, client_ptr& this_client);
 		void HandleSavePositionMessage(client_ptr& this_client);
 		void HandleLoadPositionMessage(vector<reply>& rep, client_ptr& this_client);
@@ -90,6 +90,7 @@ class request_handler {
 		int GetInt();
 		void AddUpdateSelf(vector<reply>& rep, client_ptr& this_client);
 		void AddChangedVariables(reply& rep, client_ptr& this_client);
+		void PrintByteArray(char* data, size_t size);
 };
 
 } // namespace server

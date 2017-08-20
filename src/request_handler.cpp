@@ -13,6 +13,7 @@
 #include <boost/format.hpp>
 #include <boost/algorithm/string/replace.hpp>
 #include <stack>
+#include <algorithm>
 
 namespace http {
 namespace server {
@@ -153,7 +154,7 @@ void request_handler::HandleSignOn(vector<reply>& rep, client_ptr& this_client){
 	float posy = GetFloat();
 	float posz = GetFloat();
 
-    int minimum_length = 4;
+    int minimum_length = 2;
     if(levelname.length() < minimum_length || levelpath.length() < minimum_length){
         AddErrorMessage(rep, "The level you are trying to use is not valid!");
         log::print( "Client tried to connect with invalid values " + levelname + " " + levelpath);
@@ -270,7 +271,7 @@ void request_handler::HandleSignOn(vector<reply>& rep, client_ptr& this_client){
 	client_manager_.add_to_inbox(spawn_character_reply, this_client);
 }
 
-void request_handler::HandleUpdate(vector<reply>& rep, client_ptr& this_client){
+void request_handler::HandleUpdate(vector<reply>& rep, client_ptr& this_client, size_t size){
     float new_blood_damage;
 	float new_blood_health;
 	float new_block_health;
@@ -281,7 +282,7 @@ void request_handler::HandleUpdate(vector<reply>& rep, client_ptr& this_client){
 
     this_client->set_all_variables_old();
 
-    while(data_index < strlen(data)){
+    while(data_index < size){
         player_variable_type variable_type = (player_variable_type)data[data_index];
         data_index++;
         switch (variable_type)
@@ -365,6 +366,7 @@ void request_handler::HandleUpdate(vector<reply>& rep, client_ptr& this_client){
                 break;
         }
     }
+
 	// this_client->set_roll(GetBool());
 	// this_client->set_jumpoffwall(GetBool());
 	// this_client->set_activeblock(GetBool());
@@ -411,7 +413,6 @@ void request_handler::HandleUpdate(vector<reply>& rep, client_ptr& this_client){
 				this_client->set_roll_recovery_time(0.0f);
 				this_client->set_remove_blood(true);
 
-                cout << "settings removeblood is " << remove_blood << " " << this_client->is_variable_new(remove_blood) << endl;
 				this_client->set_cut_throat(false);
                 AddUpdateSelf(rep, this_client);
                 this_client->set_remove_blood(false);
@@ -431,18 +432,6 @@ void request_handler::HandleUpdate(vector<reply>& rep, client_ptr& this_client){
         update_reply.add_to_buffers((item.second)->get_username());
         int empty_size = update_reply.get_buffer_size();
         AddChangedVariables(update_reply, item.second);
-		// update_reply.add_to_buffers((item.second)->get_username());
-		// update_reply.add_to_buffers((item.second)->get_posx());
-		// update_reply.add_to_buffers((item.second)->get_posy());
-		// update_reply.add_to_buffers((item.second)->get_posz());
-		// update_reply.add_to_buffers((item.second)->get_dirx());
-		// update_reply.add_to_buffers((item.second)->get_dirz());
-		// update_reply.add_to_buffers((item.second)->get_crouch());
-		// update_reply.add_to_buffers((item.second)->get_jump());
-		// update_reply.add_to_buffers((item.second)->get_attack());
-		// update_reply.add_to_buffers((item.second)->get_grab());
-		// update_reply.add_to_buffers((item.second)->get_item());
-		// update_reply.add_to_buffers((item.second)->get_drop());
 		// update_reply.add_to_buffers((item.second)->get_roll());
 		// update_reply.add_to_buffers((item.second)->get_jumpoffwall());
 		// update_reply.add_to_buffers((item.second)->get_activeblock());
@@ -463,6 +452,13 @@ void request_handler::HandleUpdate(vector<reply>& rep, client_ptr& this_client){
         }
         rep.push_back(update_reply);
 	}
+}
+
+void request_handler::PrintByteArray(char* data, size_t size){
+    for (int i = 0; i != size; i++){
+        std::cout << int(data[i]) << " ";
+    }
+    cout << std::endl;
 }
 
 void request_handler::AddUpdateSelf(vector<reply>& rep, client_ptr& this_client){
@@ -619,8 +615,8 @@ void request_handler::HandleLoadPositionMessage(vector<reply>& rep, client_ptr& 
 }
 
 void request_handler::handle_request(const request& req, vector<reply>& rep, client_ptr& this_client, char* data_, std::size_t bytes_transferred) {
-	data_index = 1;
 	data = data_;
+    data_index = 1;
 	switch(data[0]){
 		case SignOn :
 		{
@@ -631,7 +627,7 @@ void request_handler::handle_request(const request& req, vector<reply>& rep, cli
 		case UpdateGame :
 		{
 			// cout << "Received UpdateGame message" << endl;
-			HandleUpdate(rep, this_client);
+			HandleUpdate(rep, this_client, bytes_transferred);
 			break;
 		}
 		case UpdateSelf :

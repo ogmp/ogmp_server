@@ -3,6 +3,7 @@
 #include <ostream>
 #include <iostream>
 #include <ctime>
+#include <stdlib.h>
 
 namespace http {
 namespace server {
