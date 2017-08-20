@@ -19,9 +19,6 @@ remove_blood_(false), blood_delay_(0), cut_throat_(false), state_(0), has_signed
 }
 
 void client::set_all_variables_old(){
-	// for(size_t i = 0; i < variable_states.size(); i++){
-	// 	variable_states[i] = false;
-	// }
 	variable_states.fill(false);
 }
 

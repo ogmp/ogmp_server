@@ -88,5 +88,9 @@ vector<unsigned char> reply::intToByteArray(int value){
 	return return_bytes;
 }
 
+int reply::get_buffer_size(){
+	return buffer.size();
+}
+
 } // namespace server
 } // namespace http

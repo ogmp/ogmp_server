@@ -29,6 +29,7 @@ struct reply {
 	vector<unsigned char> intToByteArray(int value);
 	void floatToByteArray(float f);
 	void add_size_byte();
+	int get_buffer_size();
 };
 
 } // namespace server

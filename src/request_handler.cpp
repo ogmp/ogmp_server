@@ -413,14 +413,13 @@ void request_handler::HandleUpdate(vector<reply>& rep, client_ptr& this_client){
 
                 cout << "settings removeblood is " << remove_blood << " " << this_client->is_variable_new(remove_blood) << endl;
 				this_client->set_cut_throat(false);
+                AddUpdateSelf(rep, this_client);
+                this_client->set_remove_blood(false);
 			}
 		}
 	} else {
 		this_client->set_death_changed(false);
-		// this_client->set_remove_blood(false);
 	}
-
-	AddUpdateSelf(rep, this_client);
 
 	// Get states of the other clients.
 	client_map other_clients = client_manager_.get_clients(this_client);
@@ -430,6 +429,7 @@ void request_handler::HandleUpdate(vector<reply>& rep, client_ptr& this_client){
 
 		update_reply.add_to_buffers(UpdateCharacter);
         update_reply.add_to_buffers((item.second)->get_username());
+        int empty_size = update_reply.get_buffer_size();
         AddChangedVariables(update_reply, item.second);
 		// update_reply.add_to_buffers((item.second)->get_username());
 		// update_reply.add_to_buffers((item.second)->get_posx());
@@ -456,12 +456,12 @@ void request_handler::HandleUpdate(vector<reply>& rep, client_ptr& this_client){
 		// update_reply.add_to_buffers((item.second)->get_recovery_time());
 		// update_reply.add_to_buffers((item.second)->get_roll_recovery_time());
 		// update_reply.add_to_buffers((item.second)->get_ragdoll_type());
-		// update_reply.add_to_buffers((item.second)->get_remove_blood());
-		// update_reply.add_to_buffers((item.second)->get_blood_delay());
-		// update_reply.add_to_buffers((item.second)->get_cut_throat());
-		// update_reply.add_to_buffers((item.second)->get_state());
 
-		rep.push_back(update_reply);
+        //If the message is the same size as before getting the variables, then just skip this update.
+        if(update_reply.get_buffer_size() == empty_size){
+            continue;
+        }
+        rep.push_back(update_reply);
 	}
 }
 
@@ -560,6 +560,18 @@ void request_handler::AddChangedVariables(reply& update_character, client_ptr& t
     if(this_client->is_variable_new(direction_z)){
         update_character.add_to_buffers(direction_z);
         update_character.add_to_buffers(this_client->get_dirz());
+    }
+    if(this_client->is_variable_new(knocked_out)){
+        update_character.add_to_buffers(knocked_out);
+        update_character.add_to_buffers(this_client->get_knocked_out());
+    }
+    if(this_client->is_variable_new(blood_delay)){
+        update_character.add_to_buffers(blood_delay);
+        update_character.add_to_buffers(this_client->get_blood_delay());
+    }
+    if(this_client->is_variable_new(state)){
+        update_character.add_to_buffers(state);
+        update_character.add_to_buffers(this_client->get_state());
     }
 }
 
