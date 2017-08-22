@@ -77,6 +77,21 @@ void client::set_posz(float _posz) {
 	posz_ = _posz;
 }
 
+void client::set_velx(float _velx) {
+	variable_states[velocity_x] = true;
+	velx_ = _velx;
+}
+
+void client::set_vely(float _vely) {
+	variable_states[velocity_y] = true;
+	vely_ = _vely;
+}
+
+void client::set_velz(float _velz) {
+	variable_states[velocity_z] = true;
+	velz_ = _velz;
+}
+
 void client::set_saved_posx(float _posx) {
 	saved_posx_ = _posx;
 }
@@ -282,6 +297,18 @@ float client::get_posz() {
 	return posz_;
 }
 
+float client::get_velx() {
+	return velx_;
+}
+
+float client::get_vely() {
+	return vely_;
+}
+
+float client::get_velz() {
+	return velz_;
+}
+
 float client::get_saved_posx() {
 	return saved_posx_;
 }
@@ -459,7 +486,7 @@ vector<int> client::get_missing_update_variable_types(int last_update_key){
 			//Skip the lastest update with -1 because that one is already received.
   			for (int y = (i - 1); y >= 0; y--){
 				update_history current_history = client_update_history.at(y);
-				if(y != 0){
+				if(y > 1){
 					cout << "OMG missing message send! at index " << y << endl;
 				}
 				// cout << get_username()  << " Adding update at index! " << (y) << " update key " << current_history.first << endl;

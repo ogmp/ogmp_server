@@ -42,7 +42,10 @@ enum player_variable_type : char{
     position_z = 21,
     direction_x = 22,
     direction_z = 23,
-    remove_blood = 24
+    remove_blood = 24,
+    velocity_x = 25,
+    velocity_y = 26,
+    velocity_z = 27
 };
 
 #endif // HTTP_SHARED_HPP

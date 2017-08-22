@@ -34,6 +34,9 @@ class client {
 		void set_posx(float posx);
 		void set_posy(float posy);
 		void set_posz(float posz);
+		void set_velx(float velx);
+		void set_vely(float vely);
+		void set_velz(float velz);
 		void set_saved_posx(float posx);
 		void set_saved_posy(float posy);
 		void set_saved_posz(float posz);
@@ -83,6 +86,9 @@ class client {
 		float get_posx();
 		float get_posy();
 		float get_posz();
+		float get_velx();
+		float get_vely();
+		float get_velz();
 		float get_saved_posx();
 		float get_saved_posy();
 		float get_saved_posz();
@@ -126,13 +132,13 @@ class client {
 
 	private:
 		string uid_, level_path_, level_name_, username_, team_, character_;
-		float posx_, posy_, posz_, saved_posx_, saved_posy_, saved_posz_, dirx_, dirz_, blood_damage_, blood_health_, block_health_, temp_health_, permanent_health_, blood_amount_, recovery_time_, roll_recovery_time_;
+		float posx_, posy_, posz_, velx_, vely_, velz_, saved_posx_, saved_posy_, saved_posz_, dirx_, dirz_, blood_damage_, blood_health_, block_health_, temp_health_, permanent_health_, blood_amount_, recovery_time_, roll_recovery_time_;
 		bool iscrouching_, isjumping_, isattacking_, isgrabbing_, isusingitem_, isdropping_, isrolling_, isjumpingoffwall_, isactiveblocking_, death_changed_, remove_blood_, cut_throat_, has_signed_on_;
 		double last_updated_, time_of_death_;
 		int knocked_out_, ragdoll_type_, blood_delay_, state_;
 		string_map_vector commands_;
 		vector<reply> inbox_;
-		array<bool, 25> variable_states;
+		array<bool, 28> variable_states;
 		vector<update_history> client_update_history;
 		const int max_history = 10;
 		int history_index = 0;

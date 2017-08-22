@@ -365,6 +365,15 @@ void request_handler::HandleUpdate(vector<reply>& rep, client_ptr& this_client, 
             case direction_z:
                 this_client->set_dirz(GetFloat());
                 break;
+            case velocity_x:
+                this_client->set_velx(GetFloat());
+                break;
+            case velocity_y:
+                this_client->set_vely(GetFloat());
+                break;
+            case velocity_z:
+                this_client->set_velz(GetFloat());
+                break;
             default:
                 break;
         }
@@ -553,6 +562,18 @@ void request_handler::AddOtherClientVariables(reply& update_character, client_pt
             }
             case direction_z:{
                 update_character.add_to_buffers(client->get_dirz());
+                break;
+            }
+            case velocity_x:{
+                update_character.add_to_buffers(client->get_velx());
+                break;
+            }
+            case velocity_y:{
+                update_character.add_to_buffers(client->get_vely());
+                break;
+            }
+            case velocity_z:{
+                update_character.add_to_buffers(client->get_velz());
                 break;
             }
             default:{
