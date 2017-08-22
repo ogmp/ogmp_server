@@ -90,6 +90,7 @@ class request_handler {
 		int GetInt();
 		void AddUpdateSelf(vector<reply>& rep, client_ptr& this_client);
 		void AddChangedVariables(reply& rep, client_ptr& this_client);
+		void AddOtherClientVariables(reply& rep, client_ptr& client, int last_update_key);
 		void PrintByteArray(char* data, size_t size);
 };
 

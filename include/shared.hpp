@@ -4,10 +4,14 @@
 #include <string>
 #include <vector>
 #include <map>
+#include <utility>
 
 typedef std::vector<std::string> string_vector;
 typedef std::map<std::string, std::string> string_map;
 typedef std::vector<string_map> string_map_vector;
+typedef std::pair<int, std::vector<int>> update_history;
+// typedef std::vector<update_history>::iterator iter;
+typedef std::map<std::string, int> history_keys;
 
 #define _awake 0
 #define _unconscious 1

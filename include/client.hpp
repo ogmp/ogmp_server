@@ -116,9 +116,12 @@ class client {
 		bool get_cut_throat();
 		int get_state();
 		bool get_signed_on();
-
 		bool contains_signon();
 		vector <string_map> get_signon_commands();
+		void add_history(vector<int>);
+		int get_last_update_key();
+		vector<int> get_missing_update_variable_types(int last_update_key);
+		history_keys get_keys();
 
 	private:
 		string uid_, level_path_, level_name_, username_, team_, character_;
@@ -129,6 +132,10 @@ class client {
 		string_map_vector commands_;
 		vector<reply> inbox_;
 		array<bool, 25> variable_states;
+		vector<update_history> client_update_history;
+		const int max_history = 50;
+		int history_index = 0;
+		history_keys keys;
 };
 
 typedef boost::shared_ptr<client> client_ptr;

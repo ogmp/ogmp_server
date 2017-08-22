@@ -195,7 +195,6 @@ void client::set_ragdoll_type(int _ragdoll_type) {
 
 void client::set_remove_blood(bool _remove_blood) {
 	variable_states[remove_blood] = true;
-	cout << variable_states[remove_blood] << endl;
 	remove_blood_ = _remove_blood;
 }
 
@@ -406,6 +405,65 @@ int client::get_state() {
 bool client::get_signed_on(){
 	return has_signed_on_;
 }
+
+void client::add_history(vector<int> new_history){
+	update_history new_update_history;
+	new_update_history = std::make_pair(history_index, new_history);
+	client_update_history.insert(client_update_history.begin(), new_update_history);
+	history_index++;
+	if(history_index > max_history){
+		history_index = 0;
+	}
+	if(client_update_history.size() > max_history){
+		client_update_history.pop_back();
+	}
+}
+
+int client::get_last_update_key(){
+	return client_update_history.front().first;
+}
+
+vector<int> client::get_missing_update_variable_types(int last_update_key){
+	vector<int> variable_types;
+
+	for (int i = 0; i < client_update_history.size(); i++){
+		//Get the last updated history
+		if(client_update_history.at(i).first == last_update_key){
+			//Check if it's the newest update, if so return nothing.
+			if(client_update_history.at(i) == client_update_history.front()){
+				cout << get_username() << "Already received the latest update" << endl;
+				break;
+			}
+			//Skip the lastest update with -1 because that one is already received.
+			vector<update_history>::reverse_iterator rit = client_update_history.rbegin() + i -1;
+  			for (; rit!= client_update_history.rend(); ++rit){
+				update_history current_history = *rit;
+				if(current_history.first != client_update_history.at(0).first){
+					cout << get_username()  << "Adding an older update than the latest! " << (std::distance(client_update_history.begin(), rit.base())) << " getting info from update " << current_history.first << endl;
+				}
+				//Go over all the variable types in the new histories.
+				for(std::vector<int>::iterator it = current_history.second.begin() ; it != current_history.second.end(); ++it){
+					//Check if the variable has already been added, if so skip it.
+
+					std::vector<int>::iterator find_itr;
+					find_itr = find(variable_types.begin(), variable_types.end(), *it);
+					if(find_itr == variable_types.end()){
+						cout << get_username() << "Variable type " << *it << " added " << endl;
+						//std::cout << "Element not found in myvector: " << *it << '\n';
+						variable_types.push_back(*it);
+					}
+				}
+			}
+			break;
+		}
+	}
+	return variable_types;
+}
+
+history_keys client::get_keys(){
+	return keys;
+}
+
 
 bool client::contains_signon(){
 	bool contains = false;

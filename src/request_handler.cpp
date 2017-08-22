@@ -282,8 +282,11 @@ void request_handler::HandleUpdate(vector<reply>& rep, client_ptr& this_client, 
 
     this_client->set_all_variables_old();
 
+    std::vector<int> new_history;
+
     while(data_index < size){
         player_variable_type variable_type = (player_variable_type)data[data_index];
+        new_history.push_back(variable_type);
         data_index++;
         switch (variable_type)
         {
@@ -366,10 +369,7 @@ void request_handler::HandleUpdate(vector<reply>& rep, client_ptr& this_client, 
                 break;
         }
     }
-
-	// this_client->set_roll(GetBool());
-	// this_client->set_jumpoffwall(GetBool());
-	// this_client->set_activeblock(GetBool());
+    this_client->add_history(new_history);
 
 	// Add commands from queue if available.
 	while(this_client->get_number_of_inbox_messages() != 0) {
@@ -430,28 +430,134 @@ void request_handler::HandleUpdate(vector<reply>& rep, client_ptr& this_client, 
 
 		update_reply.add_to_buffers(UpdateCharacter);
         update_reply.add_to_buffers((item.second)->get_username());
-        int empty_size = update_reply.get_buffer_size();
-        AddChangedVariables(update_reply, item.second);
-		// update_reply.add_to_buffers((item.second)->get_roll());
-		// update_reply.add_to_buffers((item.second)->get_jumpoffwall());
-		// update_reply.add_to_buffers((item.second)->get_activeblock());
-		// update_reply.add_to_buffers((item.second)->get_blood_damage());
-		// update_reply.add_to_buffers((item.second)->get_blood_health());
-		// update_reply.add_to_buffers((item.second)->get_block_health());
-		// update_reply.add_to_buffers((item.second)->get_temp_health());
-		// update_reply.add_to_buffers((item.second)->get_permanent_health());
-		// update_reply.add_to_buffers((item.second)->get_knocked_out());
-		// update_reply.add_to_buffers((item.second)->get_blood_amount());
-		// update_reply.add_to_buffers((item.second)->get_recovery_time());
-		// update_reply.add_to_buffers((item.second)->get_roll_recovery_time());
-		// update_reply.add_to_buffers((item.second)->get_ragdoll_type());
 
+        int empty_size = update_reply.get_buffer_size();
+        history_keys keys = this_client->get_keys();
+        int last_update_key = keys[(item.second)->get_username()];
+        if(keys.find((item.second)->get_username()) == keys.end()){
+            //No history of this client yet.
+            keys[(item.second)->get_username()] = (item.second)->get_last_update_key();
+        }else{
+            AddOtherClientVariables(update_reply, item.second, last_update_key);
+        }
         //If the message is the same size as before getting the variables, then just skip this update.
         if(update_reply.get_buffer_size() == empty_size){
+            cout << this_client->get_username() << "Empty" << endl;
             continue;
         }
+        keys[(item.second)->get_username()] = (item.second)->get_last_update_key();
+        cout << this_client->get_username() << "Setting username " << (item.second)->get_username() << " to update key " << (item.second)->get_last_update_key() << endl;
         rep.push_back(update_reply);
 	}
+}
+
+void request_handler::AddOtherClientVariables(reply& update_character, client_ptr& client, int last_update_key){
+    vector<int> variable_types = client->get_missing_update_variable_types(last_update_key);
+
+    for(std::vector<int>::iterator it = variable_types.begin() ; it != variable_types.end(); ++it){
+        update_character.add_to_buffers(*it);
+        switch (*it){
+            case crouch:{
+                update_character.add_to_buffers(client->get_crouch());
+                break;
+            }
+            case jump:{
+                update_character.add_to_buffers(client->get_jump());
+                break;
+            }
+            case attack:{
+                update_character.add_to_buffers(client->get_attack());
+                break;
+            }
+            case grab:{
+                update_character.add_to_buffers(client->get_grab());
+                break;
+            }
+            case item:{
+                update_character.add_to_buffers(client->get_item());
+                break;
+            }
+            case drop:{
+                update_character.add_to_buffers(client->get_drop());
+                break;
+            }
+            case blood_damage:{
+                update_character.add_to_buffers(client->get_blood_damage());
+                break;
+            }
+            case blood_health:{
+                update_character.add_to_buffers(client->get_blood_health());
+                break;
+            }
+            case block_health:{
+                update_character.add_to_buffers(client->get_block_health());
+                break;
+            }
+            case temp_health:{
+                update_character.add_to_buffers(client->get_temp_health());
+                break;
+            }
+            case permanent_health:{
+                update_character.add_to_buffers(client->get_permanent_health());
+                break;
+            }
+            case blood_amount:{
+                update_character.add_to_buffers(client->get_blood_amount());
+                break;
+            }
+            case recovery_time:{
+                update_character.add_to_buffers(client->get_recovery_time());
+                break;
+            }
+            case roll_recovery_time:{
+                update_character.add_to_buffers(client->get_roll_recovery_time());
+                break;
+            }
+            case knocked_out:{
+                update_character.add_to_buffers(client->get_knocked_out());
+                break;
+            }
+            case ragdoll_type:{
+                update_character.add_to_buffers(client->get_ragdoll_type());
+                break;
+            }
+            case blood_delay:{
+                update_character.add_to_buffers(client->get_blood_delay());
+                break;
+            }
+            case state:{
+                update_character.add_to_buffers(client->get_state());
+                break;
+            }
+            case cut_throat:{
+                update_character.add_to_buffers(client->get_cut_throat());
+                break;
+            }
+            case position_x:{
+                update_character.add_to_buffers(client->get_posx());
+                break;
+            }
+            case position_y:{
+                update_character.add_to_buffers(client->get_posy());
+                break;
+            }
+            case position_z:{
+                update_character.add_to_buffers(client->get_posz());
+                break;
+            }
+            case direction_x:{
+                update_character.add_to_buffers(client->get_dirx());
+                break;
+            }
+            case direction_z:{
+                update_character.add_to_buffers(client->get_dirz());
+                break;
+            }
+            default:{
+                break;
+            }
+        }
+    }
 }
 
 void request_handler::PrintByteArray(char* data, size_t size){
