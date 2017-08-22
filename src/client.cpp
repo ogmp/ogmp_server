@@ -417,10 +417,32 @@ void client::add_history(vector<int> new_history){
 	if(client_update_history.size() > max_history){
 		client_update_history.pop_back();
 	}
+	// cout << "client history " << endl;
+	// for(int i = 0; i < client_update_history.size(); i++){
+	// 	cout << "Index " << i << client_update_history.at(i).first << endl;
+	// }
+	// cout << "-------------------" << endl;
 }
 
 int client::get_last_update_key(){
+	if(client_update_history.size() < 1){
+		return -1;
+	}
 	return client_update_history.front().first;
+}
+
+int client::get_key(std::string username){
+	auto search = keys.find(username);
+    if(search != keys.end()) {
+		return search->second;
+    }
+    else {
+		return -1;
+    }
+}
+
+void client::set_key(std::string username, int value){
+	keys[username] = value;
 }
 
 vector<int> client::get_missing_update_variable_types(int last_update_key){
@@ -431,24 +453,23 @@ vector<int> client::get_missing_update_variable_types(int last_update_key){
 		if(client_update_history.at(i).first == last_update_key){
 			//Check if it's the newest update, if so return nothing.
 			if(client_update_history.at(i) == client_update_history.front()){
-				cout << get_username() << "Already received the latest update" << endl;
+				// cout << get_username() << " Already received the latest update" << endl;
 				break;
 			}
 			//Skip the lastest update with -1 because that one is already received.
-			vector<update_history>::reverse_iterator rit = client_update_history.rbegin() + i -1;
-  			for (; rit!= client_update_history.rend(); ++rit){
-				update_history current_history = *rit;
-				if(current_history.first != client_update_history.at(0).first){
-					cout << get_username()  << "Adding an older update than the latest! " << (std::distance(client_update_history.begin(), rit.base())) << " getting info from update " << current_history.first << endl;
+  			for (int y = (i - 1); y >= 0; y--){
+				update_history current_history = client_update_history.at(y);
+				if(y != 0){
+					cout << "OMG missing message send! at index " << y << endl;
 				}
+				// cout << get_username()  << " Adding update at index! " << (y) << " update key " << current_history.first << endl;
 				//Go over all the variable types in the new histories.
 				for(std::vector<int>::iterator it = current_history.second.begin() ; it != current_history.second.end(); ++it){
 					//Check if the variable has already been added, if so skip it.
-
 					std::vector<int>::iterator find_itr;
 					find_itr = find(variable_types.begin(), variable_types.end(), *it);
 					if(find_itr == variable_types.end()){
-						cout << get_username() << "Variable type " << *it << " added " << endl;
+						// cout << get_username() << " Variable type " << *it << " added " << endl;
 						//std::cout << "Element not found in myvector: " << *it << '\n';
 						variable_types.push_back(*it);
 					}
@@ -459,11 +480,6 @@ vector<int> client::get_missing_update_variable_types(int last_update_key){
 	}
 	return variable_types;
 }
-
-history_keys client::get_keys(){
-	return keys;
-}
-
 
 bool client::contains_signon(){
 	bool contains = false;

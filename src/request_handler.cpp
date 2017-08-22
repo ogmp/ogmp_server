@@ -369,7 +369,9 @@ void request_handler::HandleUpdate(vector<reply>& rep, client_ptr& this_client, 
                 break;
         }
     }
-    this_client->add_history(new_history);
+    if(new_history.size() > 0){
+        this_client->add_history(new_history);
+    }
 
 	// Add commands from queue if available.
 	while(this_client->get_number_of_inbox_messages() != 0) {
@@ -432,21 +434,21 @@ void request_handler::HandleUpdate(vector<reply>& rep, client_ptr& this_client, 
         update_reply.add_to_buffers((item.second)->get_username());
 
         int empty_size = update_reply.get_buffer_size();
-        history_keys keys = this_client->get_keys();
-        int last_update_key = keys[(item.second)->get_username()];
-        if(keys.find((item.second)->get_username()) == keys.end()){
+        int last_update_key = this_client->get_key((item.second)->get_username());
+
+        if(last_update_key == -1){
             //No history of this client yet.
-            keys[(item.second)->get_username()] = (item.second)->get_last_update_key();
+            if((item.second)->get_last_update_key() != -1){
+                this_client->set_key((item.second)->get_username(), (item.second)->get_last_update_key());
+            }
         }else{
             AddOtherClientVariables(update_reply, item.second, last_update_key);
         }
         //If the message is the same size as before getting the variables, then just skip this update.
         if(update_reply.get_buffer_size() == empty_size){
-            cout << this_client->get_username() << "Empty" << endl;
             continue;
         }
-        keys[(item.second)->get_username()] = (item.second)->get_last_update_key();
-        cout << this_client->get_username() << "Setting username " << (item.second)->get_username() << " to update key " << (item.second)->get_last_update_key() << endl;
+        this_client->set_key((item.second)->get_username(), (item.second)->get_last_update_key());
         rep.push_back(update_reply);
 	}
 }

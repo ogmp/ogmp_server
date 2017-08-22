@@ -121,7 +121,8 @@ class client {
 		void add_history(vector<int>);
 		int get_last_update_key();
 		vector<int> get_missing_update_variable_types(int last_update_key);
-		history_keys get_keys();
+		void set_key(std::string, int);
+		int get_key(std::string);
 
 	private:
 		string uid_, level_path_, level_name_, username_, team_, character_;
@@ -133,7 +134,7 @@ class client {
 		vector<reply> inbox_;
 		array<bool, 25> variable_states;
 		vector<update_history> client_update_history;
-		const int max_history = 50;
+		const int max_history = 10;
 		int history_index = 0;
 		history_keys keys;
 };
