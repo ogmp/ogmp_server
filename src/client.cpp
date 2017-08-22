@@ -487,7 +487,7 @@ vector<int> client::get_missing_update_variable_types(int last_update_key){
   			for (int y = (i - 1); y >= 0; y--){
 				update_history current_history = client_update_history.at(y);
 				if(y > 1){
-					cout << "OMG missing message send! at index " << y << endl;
+					// cout << "OMG missing message send! at index " << y << endl;
 				}
 				// cout << get_username()  << " Adding update at index! " << (y) << " update key " << current_history.first << endl;
 				//Go over all the variable types in the new histories.
