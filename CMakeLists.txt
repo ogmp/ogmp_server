@@ -2,7 +2,8 @@ cmake_minimum_required (VERSION 2.6)
 PROJECT (OGMP)
 
 OPTION(FORCE32 "Force a 32 bit built" OFF)
-set(BOOSTDIRECTORY "C:/boost/32/boost_1_63_0" CACHE STRING "Where to find boost")
+# Used to specify the directory for the compiled binaries of libboost on windows.
+# set(BOOSTDIRECTORY "C:/boost/32/boost_1_63_0" CACHE STRING "Where to find boost")
 
 # Version
 SET(OGMP_MAJOR_VERSION0)

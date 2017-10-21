@@ -23,4 +23,9 @@ elif hash konsole 2>/dev/null; then
     fi
 else
     echo "No terminal found"
+    if [ $PORT -lt 1024 ]; then
+        sudo ./ogmp $ADDRESS $PORT $DIRECTORY
+    else
+        ./ogmp $ADDRESS $PORT $DIRECTORY
+    fi
 fi
