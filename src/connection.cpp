@@ -14,7 +14,7 @@ request_handler_(handler), remove_delay(delay){
 }
 
 void connection::start() {
-    m_timer = new boost::asio::deadline_timer(socket_.get_io_service());
+    m_timer = new boost::asio::deadline_timer(socket_.get_executor());
 	do_read();
 }
 
